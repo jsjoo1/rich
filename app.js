@@ -1,30 +1,18 @@
-// Firebase 없이 일단 로컬 메모리 기반으로 동작하게 구성 (1단계 테스트용)
+// 초기 데이터 로드 (initial_data.js 연동)
 let transactions = [];
 if (typeof initialTransactions !== 'undefined') {
   transactions = initialTransactions;
 }
 
-// 대출 설정 (돈의심리학 기준)
+// 대출 설정 (마이너스 통장 연이율)
 let loanSettings = {
-    amount: 1515456, // 초기 대출 설정 테스트 값
-    rate: 5.5,
-    startDate: '2026-04-27'
+    rate: 5.5, // 연 5.5% 이자
 };
 
 let modal = null;
 
 function won(n) { return Math.round(n).toLocaleString('ko-KR') + '원'; }
 function usd(n) { return '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
-
-function calculateAccruedInterest() {
-    const start = new Date(loanSettings.startDate);
-    const today = new Date();
-    const diffTime = Math.abs(today - start);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    // (원금 * 연이율) / 365 * 일수
-    return (loanSettings.amount * (loanSettings.rate / 100)) / 365 * diffDays;
-}
 
 // 과거 환율 불러오기 API (Frankfurter 무료 API 활용)
 async function fetchHistoricalRate(dateStr) {
@@ -43,13 +31,24 @@ function render() {
     const app = document.getElementById('app');
     
     let totalInvested = 0;
-    let totalCurrentValue = 0; // 임시로 원금과 동일 (추후 현재가 연동)
+    let accruedInterest = 0;
+    let totalCurrentValue = 0; 
     let portfolio = {};
+    const today = new Date();
     
-    // 1. 거래 내역 집계 (보유 수량 및 총 금액 계산)
+    // 1. 거래 내역 집계 및 마이너스 통장 이자 정밀 계산
     transactions.forEach(tx => {
         let isOverseas = tx.type === '주식' || tx.type.includes('해외') || tx.exchangeRate > 100;
-        let amountKRW = tx.quantity * tx.price * (tx.exchangeRate || 1);
+        
+        // [산식 반영] 국내주식: 구매단가*구매수량 / 해외주식: 구매단가*구매수량*구매당시 환율
+        let amountKRW = isOverseas ? (tx.quantity * tx.price * tx.exchangeRate) : (tx.quantity * tx.price);
+        
+        // 마통 이자 계산: 매수일부터 오늘까지의 일별 이자 누적
+        let txDate = new Date(tx.date);
+        let diffTime = today - txDate;
+        let diffDays = diffTime > 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) : 0;
+        
+        accruedInterest += amountKRW * (loanSettings.rate / 100) / 365 * diffDays;
         
         if(!portfolio[tx.name]) {
             portfolio[tx.name] = { 
@@ -57,26 +56,22 @@ function render() {
                 code: tx.code, 
                 quantity: 0, 
                 totalAmountKRW: 0, 
-                totalAmountUSD: 0,
+                totalAmountOriginal: 0, // 달러 단가 계산을 위한 원본 화폐 총합
                 isOverseas: isOverseas
             };
         }
         
         portfolio[tx.name].quantity += tx.quantity;
-        
-        // 매수/매도 누적 처리
-        if (isOverseas) {
-            portfolio[tx.name].totalAmountUSD += (tx.quantity * tx.price);
-        }
+        portfolio[tx.name].totalAmountOriginal += (tx.quantity * tx.price);
         portfolio[tx.name].totalAmountKRW += amountKRW;
         
         totalInvested += amountKRW;
-        totalCurrentValue += amountKRW;
+        totalCurrentValue += amountKRW; // API 연동 전이므로 평가금액 = 매수금액 임시 맵핑
     });
 
-    let accruedInterest = calculateAccruedInterest();
-    let marketProfit = totalCurrentValue - totalInvested;
-    let netProfit = marketProfit - accruedInterest;
+    // 실질 수익금 = 시세 차익(0으로 임시가정) - 누적 대출 이자
+    let marketProfit = totalCurrentValue - totalInvested; 
+    let netProfit = marketProfit - accruedInterest; 
     let realReturnRate = totalInvested > 0 ? (netProfit / totalInvested) * 100 : 0;
 
     // 2. 화면 상단 렌더링
@@ -92,7 +87,7 @@ function render() {
                     <span class="summary-value">${won(totalInvested)}</span>
                 </div>
                 <div class="summary-row">
-                    <span class="summary-label">누적 대출 이자 (추정)</span>
+                    <span class="summary-label">누적 대출 이자 (실제 마통 반영 추정)</span>
                     <span class="summary-value danger">-${won(accruedInterest)}</span>
                 </div>
                 <div class="summary-row" style="margin-top:12px; padding-top:12px; border-top:1px solid var(--line);">
@@ -102,6 +97,9 @@ function render() {
                         <span style="font-size:14px; font-weight:600; color:var(--text-soft);">(${realReturnRate > 0 ? '+' : ''}${realReturnRate.toFixed(2)}%)</span>
                     </span>
                 </div>
+                <div style="font-size:11px; color:var(--text-soft); text-align:right; margin-top:8px;">
+                   * 실시간 현재가 변동은 반영 전입니다.
+                </div>
             </div>
         </div>
         
@@ -109,21 +107,18 @@ function render() {
             <div class="section-title">보유 종목 현황</div>
     `;
 
-    // 3. 보유 수량이 0 초과인 종목만 필터링하여 렌더링
+    // 3. 보유 수량이 0 초과인 종목만 렌더링
     let activeStockCount = 0;
     
     Object.keys(portfolio).forEach(name => {
         let p = portfolio[name];
         
-        // ** 핵심: 보유 수량이 0 이하면 화면에 표시하지 않음 **
-        if (p.quantity <= 0) return;
-        
+        if (p.quantity <= 0) return; // 보유 수량이 0 이하인 항목 필터링
         activeStockCount++;
         
-        // 평균 구매 단가 계산
-        let avgPriceKRW = p.totalAmountKRW / p.quantity;
-        let avgPriceUSD = p.isOverseas ? (p.totalAmountUSD / p.quantity) : 0;
-        let displayPrice = p.isOverseas ? usd(avgPriceUSD) : won(avgPriceKRW);
+        // 평균 구매 단가: 해외주식은 달러($), 국내주식은 원(₩)
+        let avgPriceOriginal = p.totalAmountOriginal / p.quantity;
+        let displayPrice = p.isOverseas ? usd(avgPriceOriginal) : won(avgPriceOriginal);
         
         html += `
             <div class="card">
@@ -132,12 +127,14 @@ function render() {
                 </div>
                 <div class="tx-row"><span>평균 구매단가</span> <span class="val">${displayPrice}</span></div>
                 <div class="tx-row"><span>보유 수량</span> <span class="val">${p.quantity.toLocaleString('ko-KR')}주</span></div>
-                <div class="tx-row"><span>총 구매금액</span> <span class="val">${won(p.totalAmountKRW)}</span></div>
+                <div class="tx-row" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px; margin-top: 6px;">
+                    <span>총 구매금액(환율 적용)</span> 
+                    <span class="val" style="color:var(--text);">${won(p.totalAmountKRW)}</span>
+                </div>
             </div>
         `;
     });
     
-    // 만약 보유 종목이 없다면 메시지 표시
     if(activeStockCount === 0) {
         html += `<div style="text-align:center; padding: 40px 0; color: var(--text-soft); font-size:14px;">현재 보유 중인 종목이 없습니다.</div>`;
     }
@@ -145,7 +142,7 @@ function render() {
     html += `</div>`;
     html += `<button class="fab" id="fabAdd">+</button>`;
 
-    // 4. 모달창 렌더링
+    // 4. 입력 모달창 렌더링
     if(modal === 'add') {
         html += `
             <div class="overlay" id="ovAdd">
@@ -163,7 +160,7 @@ function render() {
                     <div class="field"><label>구매 단가</label><input type="number" step="0.01" id="addPrice" placeholder="0"></div>
                     
                     <div class="field" id="rateFieldWrap" style="display:none;">
-                        <label>환율 (선택한 날짜 기준)</label>
+                        <label>환율 (선택한 날짜 기준 자동 불러오기)</label>
                         <input type="number" step="0.1" id="addRate" value="1300.0">
                         <div style="font-size:11px; color:var(--text-soft); margin-top:4px;" id="rateMsg">환율 정보를 불러오는 중...</div>
                     </div>
@@ -176,7 +173,6 @@ function render() {
 
     app.innerHTML = html;
 
-    // 이벤트 리스너 바인딩
     let fab = document.getElementById('fabAdd');
     if(fab) fab.onclick = () => { modal = 'add'; render(); setTimeout(bindModalEvents, 50); };
     
@@ -184,7 +180,7 @@ function render() {
     if(ovAdd) ovAdd.onclick = (e) => { if(e.target === ovAdd) closeModal(); };
 }
 
-// 환율 자동 조회 이벤트 
+// 5. 환율 자동 조회 이벤트 
 function bindModalEvents() {
     const addType = document.getElementById('addType');
     const addDate = document.getElementById('addDate');
@@ -195,13 +191,13 @@ function bindModalEvents() {
     async function checkRate() {
         if (addType.value.includes('해외')) {
             rateFieldWrap.style.display = 'block';
-            rateMsg.textContent = '환율 정보를 불러오는 중...';
+            rateMsg.textContent = '선택한 날짜의 환율 정보를 불러오는 중...';
             rateMsg.style.color = 'var(--text-soft)';
             
             const rate = await fetchHistoricalRate(addDate.value);
             if (rate) {
                 addRate.value = rate;
-                rateMsg.textContent = `${addDate.value} 기준 환율이 적용되었습니다.`;
+                rateMsg.textContent = `${addDate.value} 기준 실제 환율(${rate}원)이 적용되었습니다.`;
                 rateMsg.style.color = 'var(--ok)';
             } else {
                 rateMsg.textContent = '환율을 불러오지 못했습니다. 수동으로 입력해주세요.';
@@ -258,7 +254,6 @@ function showToast(msg) {
   setTimeout(function() { t.classList.remove('show'); }, 2200);
 }
 
-// Initial render
 document.addEventListener('DOMContentLoaded', () => {
     render();
 });
