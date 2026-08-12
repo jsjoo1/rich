@@ -10,6 +10,7 @@ let loanSettings = {
 };
 
 let modal = null;
+let selectedStock = null; // 상세 조회를 위한 선택 종목
 
 function won(n) { return Math.round(n).toLocaleString('ko-KR') + '원'; }
 function usd(n) { return '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
@@ -22,7 +23,6 @@ async function fetchHistoricalRate(dateStr) {
         const data = await res.json();
         return data.rates.KRW;
     } catch (e) {
-        console.error('환율 데이터를 불러오는 데 실패했습니다.', e);
         return null;
     }
 }
@@ -38,12 +38,11 @@ function render() {
     
     // 1. 거래 내역 집계 및 마이너스 통장 이자 정밀 계산
     transactions.forEach(tx => {
-        let isOverseas = tx.type === '주식' || tx.type.includes('해외') || tx.exchangeRate > 100;
+        let isOverseas = tx.type === '주식' || tx.type.includes('해외') || tx.exchangeRate > 100 || tx.name.includes('달러');
         
-        // [산식 반영] 국내주식: 구매단가*구매수량 / 해외주식: 구매단가*구매수량*구매당시 환율
         let amountKRW = isOverseas ? (tx.quantity * tx.price * tx.exchangeRate) : (tx.quantity * tx.price);
         
-        // 마통 이자 계산: 개별 매수일부터 오늘까지의 일별 이자 누적
+        // 개별 매수일부터 오늘까지의 일별 이자 누적
         let txDate = new Date(tx.date);
         let diffTime = today.getTime() - txDate.getTime();
         let diffDays = diffTime > 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) : 0;
@@ -56,7 +55,7 @@ function render() {
                 code: tx.code, 
                 quantity: 0, 
                 totalAmountKRW: 0, 
-                totalAmountOriginal: 0, // 달러 단가 계산을 위한 원본 화폐 총합
+                totalAmountOriginal: 0, 
                 isOverseas: isOverseas
             };
         }
@@ -69,12 +68,11 @@ function render() {
         totalCurrentValue += amountKRW; // API 연동 전이므로 평가금액 = 매수금액 임시 맵핑
     });
 
-    // 실질 수익금 = 시세 차익(0으로 임시가정) - 누적 대출 이자
     let marketProfit = totalCurrentValue - totalInvested; 
     let netProfit = marketProfit - accruedInterest; 
     let realReturnRate = totalInvested > 0 ? (netProfit / totalInvested) * 100 : 0;
 
-    // 2. 화면 상단 렌더링
+    // 2. 화면 상단 요약 렌더링
     let html = `
         <div class="header-container">
             <div class="top-bar">
@@ -97,39 +95,48 @@ function render() {
                         <span style="font-size:14px; font-weight:600; color:var(--text-soft);">(${realReturnRate > 0 ? '+' : ''}${realReturnRate.toFixed(2)}%)</span>
                     </span>
                 </div>
-                <div style="font-size:11px; color:var(--text-soft); text-align:right; margin-top:8px;">
-                   * 현재가 연동 전으로 시세 차익은 0원으로 반영되어 있습니다.
-                </div>
             </div>
         </div>
         
         <div class="page">
-            <div class="section-title">보유 종목 현황</div>
+            <div class="section-title">보유 종목 현황 (터치하여 상세 내역 조회)</div>
     `;
 
-    // 3. 보유 수량이 0 초과인 종목만 렌더링
+    // 3. 보유 수량이 0 초과인 종목만 필터링하여 카드 렌더링
     let activeStockCount = 0;
     
     Object.keys(portfolio).forEach(name => {
         let p = portfolio[name];
         
-        if (p.quantity <= 0.0001) return; // 보유 수량이 0 이하인 항목 필터링 (소수점 오차 방지)
+        if (p.quantity <= 0.0001) return; // 0 이하 숨김 처리
         activeStockCount++;
         
-        // 평균 구매 단가: 해외주식은 달러($), 국내주식은 원(₩)
         let avgPriceOriginal = p.totalAmountOriginal / p.quantity;
         let displayPrice = p.isOverseas ? usd(avgPriceOriginal) : won(avgPriceOriginal);
         
+        // 개별 종목 수익률 계산 (현재가 API 연동 전이므로 평단가를 현재가로 대입)
+        let currentPriceOriginal = avgPriceOriginal; 
+        let stockProfitKRW = (currentPriceOriginal - avgPriceOriginal) * p.quantity * (p.isOverseas ? (p.totalAmountKRW / p.totalAmountOriginal) : 1);
+        let stockReturnRate = p.totalAmountKRW > 0 ? (stockProfitKRW / p.totalAmountKRW) * 100 : 0;
+        
         html += `
-            <div class="card">
+            <div class="card" onclick="openStockDetail('${name}')">
                 <div class="card-top">
-                    <div class="card-name"><span class="tag-type">${p.type}</span> ${name}</div>
+                    <div class="card-name"><span class="tag-type">${p.type || '주식'}</span> ${name}</div>
+                    <div class="card-arrow">›</div>
                 </div>
-                <div class="tx-row"><span>평균 구매단가</span> <span class="val">${displayPrice}</span></div>
-                <div class="tx-row"><span>보유 수량</span> <span class="val">${p.quantity.toLocaleString('en-US')}주</span></div>
-                <div class="tx-row" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px; margin-top: 6px;">
+                <div class="tx-row"><span>구매단가 (평균)</span> <span class="val">${displayPrice}</span></div>
+                <div class="tx-row"><span>구매수량</span> <span class="val">${p.quantity.toLocaleString('en-US', {maximumFractionDigits:4})}주</span></div>
+                
+                <div class="tx-row" style="border-top: 1px dashed var(--line); padding-top: 8px; margin-top: 8px;">
                     <span>총 구매금액${p.isOverseas ? '(환율 적용)' : ''}</span> 
                     <span class="val" style="color:var(--text);">${won(p.totalAmountKRW)}</span>
+                </div>
+                <div class="tx-row">
+                    <span>수익률 (평가)</span> 
+                    <span class="val ${stockReturnRate > 0 ? 'ok' : (stockReturnRate < 0 ? 'danger' : '')}">
+                        ${stockReturnRate > 0 ? '+' : ''}${stockReturnRate.toFixed(2)}%
+                    </span>
                 </div>
             </div>
         `;
@@ -142,7 +149,7 @@ function render() {
     html += `</div>`;
     html += `<button class="fab" id="fabAdd">+</button>`;
 
-    // 4. 입력 모달창 렌더링
+    // 4. 모달창 렌더링 (매수 추가 & 상세 내역 조회)
     if(modal === 'add') {
         html += `
             <div class="overlay" id="ovAdd">
@@ -169,18 +176,58 @@ function render() {
                 </div>
             </div>
         `;
+    } else if (modal === 'detail' && selectedStock) {
+        // 선택한 주식의 매매 기록 필터링 및 최신순 정렬
+        let stockTxs = transactions.filter(tx => tx.name === selectedStock).sort((a,b) => new Date(b.date) - new Date(a.date));
+        
+        let listHtml = stockTxs.map(tx => {
+            let isOvs = tx.type === '주식' || tx.type.includes('해외') || tx.exchangeRate > 100 || tx.name.includes('달러');
+            let pStr = isOvs ? usd(tx.price) : won(tx.price);
+            let actionType = tx.quantity > 0 ? '<span style="color:var(--danger)">매수</span>' : '<span style="color:var(--primary)">매도</span>';
+            
+            return `
+                <div class="detail-tx-item">
+                    <div class="detail-tx-date">${tx.date}<br><span style="font-size:12px; font-weight:400; color:var(--text-soft)">${actionType}</span></div>
+                    <div class="detail-tx-info">
+                        <span class="qty">${Math.abs(tx.quantity).toLocaleString('en-US', {maximumFractionDigits:4})}주</span>
+                        <span class="price">단가: ${pStr}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        html += `
+            <div class="overlay" id="ovDetail">
+                <div class="sheet">
+                    <div class="sheet-title">${selectedStock} 매매 기록<button class="close" onclick="closeModal()">✕</button></div>
+                    <div class="detail-tx-list">
+                        ${listHtml}
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     app.innerHTML = html;
 
+    // 이벤트 리스너 바인딩
     let fab = document.getElementById('fabAdd');
     if(fab) fab.onclick = () => { modal = 'add'; render(); setTimeout(bindModalEvents, 50); };
     
     let ovAdd = document.getElementById('ovAdd');
     if(ovAdd) ovAdd.onclick = (e) => { if(e.target === ovAdd) closeModal(); };
+    
+    let ovDetail = document.getElementById('ovDetail');
+    if(ovDetail) ovDetail.onclick = (e) => { if(e.target === ovDetail) closeModal(); };
 }
 
-// 5. 환율 자동 조회 이벤트 
+// 개별 주식 상세 기록 모달 열기
+window.openStockDetail = function(name) {
+    selectedStock = name;
+    modal = 'detail';
+    render();
+}
+
 function bindModalEvents() {
     const addType = document.getElementById('addType');
     const addDate = document.getElementById('addDate');
@@ -215,6 +262,7 @@ function bindModalEvents() {
 
 window.closeModal = function() {
     modal = null;
+    selectedStock = null;
     render();
 }
 
