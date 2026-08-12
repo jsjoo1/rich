@@ -32,6 +32,7 @@ function render() {
     
     // 합계 계산
     let totalInvested = 0;
+    let totalCurrentValue = 0; // 현재 평가 금액 (API 연동 전 임시로 매수원금과 동일하게 설정)
     
     // 종목별 수량 및 평균 단가 계산용 맵
     let portfolio = {};
@@ -39,6 +40,7 @@ function render() {
     transactions.forEach(tx => {
         let amountKRW = tx.quantity * tx.price * (tx.exchangeRate || 1);
         totalInvested += amountKRW;
+        totalCurrentValue += amountKRW; // TODO: 추후 현재가 연동 시 이 부분을 현재가 기준으로 변경
         
         if(!portfolio[tx.name]) {
             portfolio[tx.name] = { type: tx.type, code: tx.code, quantity: 0, totalAmount: 0 };
@@ -48,6 +50,11 @@ function render() {
     });
 
     let accruedInterest = calculateAccruedInterest();
+    
+    // 실질 수익금 및 수익률 계산
+    let marketProfit = totalCurrentValue - totalInvested; // 주식 시세 차익
+    let netProfit = marketProfit - accruedInterest; // 실질 수익금 (수익금액 - 대출이자금액)
+    let realReturnRate = totalInvested > 0 ? (netProfit / totalInvested) * 100 : 0;
 
     let html = `
         <div class="header-container">
@@ -65,8 +72,11 @@ function render() {
                     <span class="summary-value danger">-${won(accruedInterest)}</span>
                 </div>
                 <div class="summary-row" style="margin-top:12px; padding-top:12px; border-top:1px solid var(--line);">
-                    <span class="summary-label">투자 원금 대비 이자율</span>
-                    <span class="summary-value danger">${((accruedInterest / totalInvested) * 100).toFixed(2)}%</span>
+                    <span class="summary-label">실질 수익률 (수익금 - 이자)</span>
+                    <span class="summary-value ${netProfit >= 0 ? 'ok' : 'danger'}">
+                        ${netProfit > 0 ? '+' : ''}${won(netProfit)}
+                        <span style="font-size:14px; font-weight:600; color:var(--text-soft);">(${realReturnRate > 0 ? '+' : ''}${realReturnRate.toFixed(2)}%)</span>
+                    </span>
                 </div>
             </div>
         </div>
@@ -146,6 +156,7 @@ window.submitAdd = function() {
     }
 
     transactions.unshift({
+        portfolio: "수동입력",
         date: date,
         type: type,
         name: name,
