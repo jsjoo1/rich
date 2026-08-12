@@ -6,16 +6,21 @@ if (typeof initialTransactions !== 'undefined') {
 
 // 대출 설정 (마이너스 통장 연이율)
 let loanSettings = {
-    rate: 5.5, // 연 5.5% 이자
+    rate: 5.5, 
 };
 
+// UI 상태 관리 변수들
 let modal = null;
-let selectedStock = null; // 상세 조회를 위한 선택 종목
+let selectedStock = null; 
+let searchText = '';
+let sortBy = 'invested_desc'; // 'invested_desc', 'value_desc', 'name_asc'
+let viewMode = 'list'; // 'list' 또는 'chart'
+let chartInstance = null; // Chart.js 인스턴스
 
 function won(n) { return Math.round(n).toLocaleString('ko-KR') + '원'; }
 function usd(n) { return '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 
-// 과거 환율 불러오기 API (Frankfurter 무료 API 활용)
+// 과거 환율 불러오기 API
 async function fetchHistoricalRate(dateStr) {
     try {
         const res = await fetch(`https://api.frankfurter.app/${dateStr}?from=USD&to=KRW`);
@@ -27,7 +32,20 @@ async function fetchHistoricalRate(dateStr) {
     }
 }
 
+// Chart.js 기본 텍스트 색상 다크모드 대응
+Chart.defaults.color = '#8f95b2';
+
 function render() {
+    // 검색창 포커스 유지를 위한 꼼수
+    let focusedElementId = null;
+    let cursorPosition = 0;
+    if (document.activeElement) {
+        focusedElementId = document.activeElement.id;
+        if (focusedElementId === 'searchInput') {
+            cursorPosition = document.activeElement.selectionStart;
+        }
+    }
+
     const app = document.getElementById('app');
     
     let totalInvested = 0;
@@ -36,13 +54,11 @@ function render() {
     let portfolio = {};
     const today = new Date();
     
-    // 1. 거래 내역 집계 및 마이너스 통장 이자 정밀 계산
+    // 거래 내역 집계
     transactions.forEach(tx => {
         let isOverseas = tx.type === '주식' || tx.type.includes('해외') || tx.exchangeRate > 100 || tx.name.includes('달러');
-        
         let amountKRW = isOverseas ? (tx.quantity * tx.price * tx.exchangeRate) : (tx.quantity * tx.price);
         
-        // 개별 매수일부터 오늘까지의 일별 이자 누적
         let txDate = new Date(tx.date);
         let diffTime = today.getTime() - txDate.getTime();
         let diffDays = diffTime > 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) : 0;
@@ -56,6 +72,7 @@ function render() {
                 quantity: 0, 
                 totalAmountKRW: 0, 
                 totalAmountOriginal: 0, 
+                currentValueKRW: 0, // 평가금액 필드 추가
                 isOverseas: isOverseas
             };
         }
@@ -64,15 +81,32 @@ function render() {
         portfolio[tx.name].totalAmountOriginal += (tx.quantity * tx.price);
         portfolio[tx.name].totalAmountKRW += amountKRW;
         
+        // *임시 설정* : 구글 파이낸스 연결 전이므로 평가금액을 매수금액과 동일하게 취급합니다.
+        portfolio[tx.name].currentValueKRW += amountKRW; 
+
         totalInvested += amountKRW;
-        totalCurrentValue += amountKRW; // API 연동 전이므로 평가금액 = 매수금액 임시 맵핑
+        totalCurrentValue += amountKRW; 
     });
 
     let marketProfit = totalCurrentValue - totalInvested; 
     let netProfit = marketProfit - accruedInterest; 
     let realReturnRate = totalInvested > 0 ? (netProfit / totalInvested) * 100 : 0;
 
-    // 2. 화면 상단 요약 렌더링
+    // 필터링 및 정렬 처리
+    let activeStocks = Object.keys(portfolio).filter(name => {
+        let p = portfolio[name];
+        return p.quantity > 0.0001 && name.toLowerCase().includes(searchText.toLowerCase());
+    });
+
+    activeStocks.sort((a, b) => {
+        let pA = portfolio[a];
+        let pB = portfolio[b];
+        if (sortBy === 'name_asc') return a.localeCompare(b);
+        if (sortBy === 'invested_desc') return pB.totalAmountKRW - pA.totalAmountKRW;
+        if (sortBy === 'value_desc') return pB.currentValueKRW - pA.currentValueKRW; // 현재는 구매금액과 동일
+        return 0;
+    });
+
     let html = `
         <div class="header-container">
             <div class="top-bar">
@@ -83,6 +117,10 @@ function render() {
                 <div class="summary-row">
                     <span class="summary-label">총 투자 원금</span>
                     <span class="summary-value">${won(totalInvested)}</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">총 평가 금액</span>
+                    <span class="summary-value">${won(totalCurrentValue)}</span>
                 </div>
                 <div class="summary-row">
                     <span class="summary-label">누적 대출 이자 (추정)</span>
@@ -99,57 +137,76 @@ function render() {
         </div>
         
         <div class="page">
-            <div class="section-title">보유 종목 현황 (터치하여 상세 내역 조회)</div>
-    `;
-
-    // 3. 보유 수량이 0 초과인 종목만 필터링하여 카드 렌더링
-    let activeStockCount = 0;
-    
-    Object.keys(portfolio).forEach(name => {
-        let p = portfolio[name];
-        
-        if (p.quantity <= 0.0001) return; // 0 이하 숨김 처리
-        activeStockCount++;
-        
-        let avgPriceOriginal = p.totalAmountOriginal / p.quantity;
-        let displayPrice = p.isOverseas ? usd(avgPriceOriginal) : won(avgPriceOriginal);
-        
-        // 개별 종목 수익률 계산 (현재가 API 연동 전이므로 평단가를 현재가로 대입)
-        let currentPriceOriginal = avgPriceOriginal; 
-        let stockProfitKRW = (currentPriceOriginal - avgPriceOriginal) * p.quantity * (p.isOverseas ? (p.totalAmountKRW / p.totalAmountOriginal) : 1);
-        let stockReturnRate = p.totalAmountKRW > 0 ? (stockProfitKRW / p.totalAmountKRW) * 100 : 0;
-        
-        html += `
-            <div class="card" onclick="openStockDetail('${name}')">
-                <div class="card-top">
-                    <div class="card-name"><span class="tag-type">${p.type || '주식'}</span> ${name}</div>
-                    <div class="card-arrow">›</div>
+            <div class="section-title">보유 종목 현황 (${activeStocks.length}종목)</div>
+            
+            <!-- 필터 & 뷰 모드 툴바 -->
+            <div class="portfolio-tools">
+                <div class="view-toggles">
+                    <button class="${viewMode === 'list' ? 'active' : ''}" onclick="window.setViewMode('list')">리스트로 보기</button>
+                    <button class="${viewMode === 'chart' ? 'active' : ''}" onclick="window.setViewMode('chart')">파이 차트로 보기</button>
                 </div>
-                <div class="tx-row"><span>구매단가 (평균)</span> <span class="val">${displayPrice}</span></div>
-                <div class="tx-row"><span>구매수량</span> <span class="val">${p.quantity.toLocaleString('en-US', {maximumFractionDigits:4})}주</span></div>
-                
-                <div class="tx-row" style="border-top: 1px dashed var(--line); padding-top: 8px; margin-top: 8px;">
-                    <span>총 구매금액${p.isOverseas ? '(환율 적용)' : ''}</span> 
-                    <span class="val" style="color:var(--text);">${won(p.totalAmountKRW)}</span>
-                </div>
-                <div class="tx-row">
-                    <span>수익률 (평가)</span> 
-                    <span class="val ${stockReturnRate > 0 ? 'ok' : (stockReturnRate < 0 ? 'danger' : '')}">
-                        ${stockReturnRate > 0 ? '+' : ''}${stockReturnRate.toFixed(2)}%
-                    </span>
+                <div class="filter-sort-row">
+                    <input type="text" id="searchInput" placeholder="종목명 검색..." value="${searchText}" oninput="window.setSearchText(this.value)">
+                    <select id="sortSelect" onchange="window.setSortBy(this.value)">
+                        <option value="invested_desc" ${sortBy === 'invested_desc' ? 'selected' : ''}>구매금액순</option>
+                        <option value="value_desc" ${sortBy === 'value_desc' ? 'selected' : ''}>평가금액순</option>
+                        <option value="name_asc" ${sortBy === 'name_asc' ? 'selected' : ''}>종목명순</option>
+                    </select>
                 </div>
             </div>
+    `;
+
+    if (viewMode === 'list') {
+        activeStocks.forEach(name => {
+            let p = portfolio[name];
+            let avgPriceOriginal = p.totalAmountOriginal / p.quantity;
+            let displayPrice = p.isOverseas ? usd(avgPriceOriginal) : won(avgPriceOriginal);
+            
+            let stockProfitKRW = p.currentValueKRW - p.totalAmountKRW;
+            let stockReturnRate = p.totalAmountKRW > 0 ? (stockProfitKRW / p.totalAmountKRW) * 100 : 0;
+            
+            html += `
+                <div class="card" onclick="openStockDetail('${name}')">
+                    <div class="card-top">
+                        <div class="card-name"><span class="tag-type">${p.type || '주식'}</span> ${name}</div>
+                        <div class="card-arrow">›</div>
+                    </div>
+                    <div class="tx-row"><span>구매단가 (평균)</span> <span class="val">${displayPrice}</span></div>
+                    <div class="tx-row"><span>보유 수량</span> <span class="val">${p.quantity.toLocaleString('en-US', {maximumFractionDigits:4})}주</span></div>
+                    
+                    <div class="tx-row" style="border-top: 1px dashed var(--line); padding-top: 8px; margin-top: 8px;">
+                        <span>총 구매금액${p.isOverseas ? '(환율 적용)' : ''}</span> 
+                        <span class="val" style="color:var(--text);">${won(p.totalAmountKRW)}</span>
+                    </div>
+                    <div class="tx-row">
+                        <span>현재 평가금액</span> 
+                        <span class="val">${won(p.currentValueKRW)}</span>
+                    </div>
+                    <div class="tx-row">
+                        <span>수익률 (평가)</span> 
+                        <span class="val ${stockReturnRate > 0 ? 'ok' : (stockReturnRate < 0 ? 'danger' : '')}">
+                            ${stockReturnRate > 0 ? '+' : ''}${stockReturnRate.toFixed(2)}%
+                        </span>
+                    </div>
+                </div>
+            `;
+        });
+        
+        if(activeStocks.length === 0) {
+            html += `<div style="text-align:center; padding: 40px 0; color: var(--text-soft); font-size:14px;">조건에 맞는 종목이 없습니다.</div>`;
+        }
+    } else if (viewMode === 'chart') {
+        html += `
+            <div class="chart-container">
+                ${activeStocks.length > 0 ? '<canvas id="portfolioChart"></canvas>' : '<div style="color:var(--text-soft); font-size:14px;">표시할 데이터가 없습니다.</div>'}
+            </div>
         `;
-    });
-    
-    if(activeStockCount === 0) {
-        html += `<div style="text-align:center; padding: 40px 0; color: var(--text-soft); font-size:14px;">현재 보유 중인 종목이 없습니다.</div>`;
     }
 
     html += `</div>`;
     html += `<button class="fab" id="fabAdd">+</button>`;
 
-    // 4. 모달창 렌더링 (매수 추가 & 상세 내역 조회)
+    // 모달창 렌더링
     if(modal === 'add') {
         html += `
             <div class="overlay" id="ovAdd">
@@ -177,7 +234,6 @@ function render() {
             </div>
         `;
     } else if (modal === 'detail' && selectedStock) {
-        // 선택한 주식의 매매 기록 필터링 및 최신순 정렬
         let stockTxs = transactions.filter(tx => tx.name === selectedStock).sort((a,b) => new Date(b.date) - new Date(a.date));
         
         let listHtml = stockTxs.map(tx => {
@@ -210,6 +266,22 @@ function render() {
 
     app.innerHTML = html;
 
+    // 포커스 복원 (검색창 연속 타이핑 시 끊김 방지)
+    if (focusedElementId) {
+        let el = document.getElementById(focusedElementId);
+        if (el) {
+            el.focus();
+            if (focusedElementId === 'searchInput') {
+                el.setSelectionRange(cursorPosition, cursorPosition);
+            }
+        }
+    }
+
+    // 차트 모드일 때 파이 차트 그리기
+    if (viewMode === 'chart' && activeStocks.length > 0) {
+        renderChart(activeStocks, portfolio);
+    }
+
     // 이벤트 리스너 바인딩
     let fab = document.getElementById('fabAdd');
     if(fab) fab.onclick = () => { modal = 'add'; render(); setTimeout(bindModalEvents, 50); };
@@ -221,7 +293,53 @@ function render() {
     if(ovDetail) ovDetail.onclick = (e) => { if(e.target === ovDetail) closeModal(); };
 }
 
-// 개별 주식 상세 기록 모달 열기
+// 툴바 제어 함수들 (전역 스코프 등록)
+window.setViewMode = function(mode) { viewMode = mode; render(); }
+window.setSearchText = function(text) { searchText = text; render(); }
+window.setSortBy = function(sort) { sortBy = sort; render(); }
+
+// 파이 차트 렌더링 함수
+function renderChart(stocks, portfolioData) {
+    let ctx = document.getElementById('portfolioChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy(); // 기존 차트 파괴
+
+    // 상위 10개만 색상을 다르게 하고 나머지는 '기타'로 묶거나 그냥 다 보여줌
+    let labels = stocks;
+    let data = stocks.map(name => portfolioData[name].currentValueKRW);
+    // 무지개색 자동 분배
+    let bgColors = stocks.map((_, i) => `hsl(${(i * 360 / stocks.length) % 360}, 70%, 60%)`);
+
+    chartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: bgColors,
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12 } },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) label += ': ';
+                            label += won(context.raw);
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 상세 모달 열기
 window.openStockDetail = function(name) {
     selectedStock = name;
     modal = 'detail';
