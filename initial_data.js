@@ -1,5 +1,6 @@
 const initialTransactions = [
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-27",
     "type": "국내주식",
     "name": "KODEX 은행",
@@ -9,6 +10,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-27",
     "type": "국내주식",
     "name": "RISE 중국본토CSI300",
@@ -18,6 +20,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-27",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -27,6 +30,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-27",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -36,6 +40,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-27",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -45,6 +50,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-27",
     "type": "주식",
     "name": "AAPL",
@@ -54,6 +60,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-27",
     "type": "주식",
     "name": "MSFT",
@@ -63,6 +70,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-27",
     "type": "주식",
     "name": "AMZN",
@@ -72,6 +80,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-28",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -81,6 +90,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-28",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -90,6 +100,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-28",
     "type": "국내주식",
     "name": "ACE AI반도체TOP3+",
@@ -99,6 +110,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-28",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -108,6 +120,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-28",
     "type": "국내주식",
     "name": "KODEX 미국반도체",
@@ -117,6 +130,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-28",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -126,6 +140,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-28",
     "type": "주식",
     "name": "AVGO",
@@ -135,6 +150,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-28",
     "type": "주식",
     "name": "ORCL",
@@ -144,6 +160,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-29",
     "type": "국내주식",
     "name": "ACE AI반도체TOP3+",
@@ -153,6 +170,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-29",
     "type": "국내주식",
     "name": "KODEX 은행",
@@ -162,6 +180,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-29",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -171,6 +190,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-29",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -180,6 +200,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-29",
     "type": "국내주식",
     "name": "RISE 중국본토CSI300",
@@ -189,6 +210,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-30",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -198,6 +220,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-30",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -207,6 +230,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-30",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -216,6 +240,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-04-30",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -225,6 +250,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-04",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -234,6 +260,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-04",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -243,6 +270,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-04",
     "type": "국내주식",
     "name": "KODEX 은행",
@@ -252,6 +280,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-04",
     "type": "국내주식",
     "name": "RISE 중국본토CSI300",
@@ -261,6 +290,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-07",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -270,6 +300,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-07",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -279,6 +310,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-07",
     "type": "국내주식",
     "name": "KODEX 은행",
@@ -288,6 +320,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-07",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -297,6 +330,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-08",
     "type": "국내주식",
     "name": "삼성전자",
@@ -306,6 +340,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-08",
     "type": "주식",
     "name": "XOM",
@@ -315,6 +350,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-08",
     "type": "주식",
     "name": "GOOGL",
@@ -324,6 +360,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-11",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -333,6 +370,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-11",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -342,6 +380,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-11",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -351,6 +390,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-11",
     "type": "국내주식",
     "name": "RISE 중국본토CSI300",
@@ -360,6 +400,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-12",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -369,6 +410,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-12",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -378,6 +420,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-12",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -387,6 +430,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-12",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -396,6 +440,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-12",
     "type": "국내주식",
     "name": "SK하이닉스",
@@ -405,6 +450,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-13",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -414,6 +460,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-13",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -423,6 +470,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-15",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -432,6 +480,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-15",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -441,6 +490,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-15",
     "type": "국내주식",
     "name": "KODEX 은행",
@@ -450,6 +500,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-15",
     "type": "국내주식",
     "name": "RISE 중국본토CSI300",
@@ -459,6 +510,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-15",
     "type": "국내주식",
     "name": "ACE AI반도체TOP3+",
@@ -468,6 +520,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-15",
     "type": "주식",
     "name": "NVDA",
@@ -477,6 +530,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-15",
     "type": "주식",
     "name": "MU",
@@ -486,6 +540,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-18",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -495,6 +550,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-18",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -504,6 +560,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-18",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -513,6 +570,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-18",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -522,6 +580,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-19",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -531,6 +590,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-19",
     "type": "국내주식",
     "name": "ACE AI반도체TOP3+",
@@ -540,6 +600,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-19",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -549,6 +610,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-20",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -558,6 +620,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-20",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -567,6 +630,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-20",
     "type": "국내주식",
     "name": "KODEX 은행",
@@ -576,6 +640,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-21",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -585,6 +650,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-21",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -594,6 +660,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-21",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -603,6 +670,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-22",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -612,6 +680,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-22",
     "type": "국내주식",
     "name": "RISE 중국본토CSI300",
@@ -621,6 +690,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-26",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -630,6 +700,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-26",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -639,6 +710,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-26",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -648,6 +720,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-26",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -657,6 +730,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-27",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -666,6 +740,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-27",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -675,6 +750,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-27",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -684,6 +760,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-28",
     "type": "국내주식",
     "name": "TIGER 미국우주테크",
@@ -693,6 +770,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-28",
     "type": "국내주식",
     "name": "RISE 중국본토CSI300",
@@ -702,6 +780,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-28",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -711,6 +790,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-28",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -720,6 +800,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-29",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -729,6 +810,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-29",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -738,6 +820,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-05-29",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -747,6 +830,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-01",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -756,6 +840,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-01",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -765,6 +850,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-01",
     "type": "국내주식",
     "name": "KODEX 은행",
@@ -774,6 +860,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-01",
     "type": "주식",
     "name": "INTC",
@@ -783,6 +870,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-01",
     "type": "주식",
     "name": "GOOGL",
@@ -792,6 +880,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-01",
     "type": "주식",
     "name": "AMZN",
@@ -801,6 +890,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-02",
     "type": "국내주식",
     "name": "KODEX 은행",
@@ -810,6 +900,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-02",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -819,6 +910,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-02",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -828,6 +920,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-04",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -837,6 +930,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-04",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -846,6 +940,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-04",
     "type": "국내주식",
     "name": "TIGER 미국우주테크",
@@ -855,6 +950,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-04",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -864,6 +960,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-05",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -873,6 +970,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-05",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -882,6 +980,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-05",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -891,6 +990,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-08",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -900,6 +1000,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-08",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -909,6 +1010,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-08",
     "type": "국내주식",
     "name": "RISE 중국본토CSI300",
@@ -918,6 +1020,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-08",
     "type": "국내주식",
     "name": "KODEX 은행",
@@ -927,6 +1030,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-08",
     "type": "주식",
     "name": "AVGO",
@@ -936,6 +1040,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-08",
     "type": "주식",
     "name": "AMZN",
@@ -945,6 +1050,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-09",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -954,6 +1060,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-09",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -963,6 +1070,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-09",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -972,6 +1080,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-10",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -981,6 +1090,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-10",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -990,6 +1100,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-10",
     "type": "국내주식",
     "name": "TIGER 미국우주테크",
@@ -999,6 +1110,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-10",
     "type": "국내주식",
     "name": "KODEX 은행",
@@ -1008,6 +1120,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-10",
     "type": "국내주식",
     "name": "RISE 중국본토CSI300",
@@ -1017,6 +1130,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-10",
     "type": "국내주식",
     "name": "ACE AI반도체TOP3+",
@@ -1026,6 +1140,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-10",
     "type": "국내주식",
     "name": "삼성전자",
@@ -1035,6 +1150,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-10",
     "type": "주식",
     "name": "AAPL",
@@ -1044,6 +1160,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-10",
     "type": "주식",
     "name": "PFE",
@@ -1053,6 +1170,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-11",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1062,6 +1180,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-11",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1071,6 +1190,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-11",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -1080,6 +1200,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-12",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1089,6 +1210,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-12",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1098,6 +1220,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-12",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -1107,6 +1230,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-15",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1116,6 +1240,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-15",
     "type": "국내주식",
     "name": "TIGER 미국우주테크",
@@ -1125,6 +1250,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-15",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1134,6 +1260,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-16",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1143,6 +1270,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-16",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1152,6 +1280,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-16",
     "type": "국내주식",
     "name": "TIGER 미국우주테크",
@@ -1161,6 +1290,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-16",
     "type": "국내주식",
     "name": "TIGER 반도체TOP10",
@@ -1170,6 +1300,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-16",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -1179,6 +1310,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-17",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1188,6 +1320,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-17",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1197,6 +1330,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-17",
     "type": "국내주식",
     "name": "KODEX 은행",
@@ -1206,6 +1340,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-17",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -1215,6 +1350,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-17",
     "type": "국내주식",
     "name": "ACE 미국대형가치주액티브",
@@ -1224,6 +1360,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-18",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1233,6 +1370,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-18",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1242,6 +1380,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-18",
     "type": "국내주식",
     "name": "TIGER 미국우주테크",
@@ -1251,6 +1390,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-19",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1260,6 +1400,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-19",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1269,6 +1410,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-19",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -1278,6 +1420,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-22",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1287,6 +1430,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-22",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1296,6 +1440,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-22",
     "type": "국내주식",
     "name": "KODEX 은행",
@@ -1305,6 +1450,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-22",
     "type": "국내주식",
     "name": "ACE 미국대형가치주액티브",
@@ -1314,6 +1460,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-22",
     "type": "국내주식",
     "name": "TIGER 미국우주테크",
@@ -1323,6 +1470,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-23",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1332,6 +1480,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-23",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1341,6 +1490,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-23",
     "type": "국내주식",
     "name": "RISE 중국본토CSI300",
@@ -1350,6 +1500,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-23",
     "type": "국내주식",
     "name": "삼성전자",
@@ -1359,6 +1510,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-23",
     "type": "주식",
     "name": "XLP",
@@ -1368,6 +1520,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-23",
     "type": "주식",
     "name": "SCHD",
@@ -1377,6 +1530,7 @@ const initialTransactions = [
     "exchangeRate": 1415.35
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-24",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1386,6 +1540,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-24",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1395,6 +1550,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-24",
     "type": "국내주식",
     "name": "ACE 미국대형가치주액티브",
@@ -1404,6 +1560,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-25",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1413,6 +1570,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-25",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1422,6 +1580,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-25",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -1431,6 +1590,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-25",
     "type": "국내주식",
     "name": "ACE 미국대형가치주액티브",
@@ -1440,6 +1600,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-26",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1449,6 +1610,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-26",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1458,6 +1620,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-26",
     "type": "국내주식",
     "name": "TIGER 미국우주테크",
@@ -1467,6 +1630,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-26",
     "type": "국내주식",
     "name": "삼성전자",
@@ -1476,6 +1640,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-29",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1485,6 +1650,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-29",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1494,6 +1660,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-29",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -1503,6 +1670,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-30",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1512,6 +1680,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-30",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1521,6 +1690,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-06-30",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -1530,6 +1700,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-01",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1539,6 +1710,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-01",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1548,6 +1720,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-01",
     "type": "국내주식",
     "name": "ACE 미국대형가치주액티브",
@@ -1557,6 +1730,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-01",
     "type": "국내주식",
     "name": "삼성전자",
@@ -1566,6 +1740,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-02",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1575,6 +1750,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-02",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1584,6 +1760,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-02",
     "type": "국내주식",
     "name": "삼성전자",
@@ -1593,6 +1770,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-03",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1602,6 +1780,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-03",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1611,6 +1790,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-03",
     "type": "국내주식",
     "name": "RISE 중국본토CSI300",
@@ -1620,6 +1800,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-03",
     "type": "국내주식",
     "name": "ACE 미국대형가치주액티브",
@@ -1629,6 +1810,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-06",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1638,6 +1820,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-06",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1647,6 +1830,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-06",
     "type": "국내주식",
     "name": "ACE AI반도체TOP3+",
@@ -1656,6 +1840,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-06",
     "type": "국내주식",
     "name": "TIGER 글로벌AI&로보틱스",
@@ -1665,6 +1850,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-07",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1674,6 +1860,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-07",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1683,6 +1870,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-07",
     "type": "국내주식",
     "name": "ACE AI반도체TOP3+",
@@ -1692,6 +1880,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-07",
     "type": "국내주식",
     "name": "TIGER 글로벌AI&로보틱스",
@@ -1701,6 +1890,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-07",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -1710,6 +1900,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-07",
     "type": "국내주식",
     "name": "삼성전자",
@@ -1719,6 +1910,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-08",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1728,6 +1920,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-08",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1737,6 +1930,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-08",
     "type": "국내주식",
     "name": "ACE 미국대형가치주액티브",
@@ -1746,6 +1940,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-09",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1755,6 +1950,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-09",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1764,6 +1960,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-09",
     "type": "국내주식",
     "name": "ACE 미국대형가치주액티브",
@@ -1773,6 +1970,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-09",
     "type": "국내주식",
     "name": "TIGER 글로벌AI&로보틱스",
@@ -1782,6 +1980,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-09",
     "type": "국내주식",
     "name": "TIGER 글로벌AI&로보틱스",
@@ -1791,6 +1990,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-10",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1800,6 +2000,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-10",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1809,6 +2010,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-10",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -1818,6 +2020,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-10",
     "type": "국내주식",
     "name": "ACE 미국대형가치주액티브",
@@ -1827,6 +2030,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-10",
     "type": "국내주식",
     "name": "TIGER 미국우주테크",
@@ -1836,6 +2040,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-13",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1845,6 +2050,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-14",
     "type": "국내주식",
     "name": "삼성전자",
@@ -1854,6 +2060,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-14",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1863,6 +2070,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-14",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1872,6 +2080,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-14",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -1881,6 +2090,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-15",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1890,6 +2100,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-15",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1899,6 +2110,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-15",
     "type": "국내주식",
     "name": "ACE 미국대형가치주액티브",
@@ -1908,6 +2120,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-16",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1917,6 +2130,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-16",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1926,6 +2140,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-20",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1935,6 +2150,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-20",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1944,6 +2160,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-20",
     "type": "국내주식",
     "name": "RISE 중국본토CSI300",
@@ -1953,6 +2170,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-21",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1962,6 +2180,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-21",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1971,6 +2190,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-21",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -1980,6 +2200,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-22",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -1989,6 +2210,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-22",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -1998,6 +2220,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-23",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -2007,6 +2230,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-23",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -2016,6 +2240,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-24",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -2025,6 +2250,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-24",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -2034,6 +2260,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-24",
     "type": "국내주식",
     "name": "ACE 미국대형가치주액티브",
@@ -2043,6 +2270,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-24",
     "type": "국내주식",
     "name": "KODEX 은행",
@@ -2052,6 +2280,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-27",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -2061,6 +2290,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-27",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -2070,6 +2300,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-27",
     "type": "국내주식",
     "name": "RISE 중국본토CSI300",
@@ -2079,6 +2310,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-28",
     "type": "국내주식",
     "name": "RISE 중국본토CSI300",
@@ -2088,6 +2320,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-28",
     "type": "국내주식",
     "name": "삼성전자",
@@ -2097,6 +2330,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-28",
     "type": "국내주식",
     "name": "SK하이닉스",
@@ -2106,6 +2340,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-28",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -2115,6 +2350,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-28",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -2124,6 +2360,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-29",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -2133,6 +2370,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-29",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -2142,6 +2380,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-29",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -2151,6 +2390,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-29",
     "type": "국내주식",
     "name": "ACE 미국대형가치주액티브",
@@ -2160,6 +2400,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-30",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -2169,6 +2410,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-30",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -2178,6 +2420,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-31",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -2187,6 +2430,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-07-31",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -2196,6 +2440,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-03",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -2205,6 +2450,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-03",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -2214,6 +2460,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-04",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -2223,6 +2470,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-04",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -2232,6 +2480,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-04",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -2241,6 +2490,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-04",
     "type": "국내주식",
     "name": "ACE 미국대형가치주액티브",
@@ -2250,6 +2500,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-05",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -2259,6 +2510,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-05",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -2268,6 +2520,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-05",
     "type": "국내주식",
     "name": "RISE 글로벌농업경제",
@@ -2277,6 +2530,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-06",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -2286,6 +2540,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-06",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -2295,6 +2550,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-06",
     "type": "국내주식",
     "name": "ACE 미국대형가치주액티브",
@@ -2304,6 +2560,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-07",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -2313,6 +2570,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-07",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -2322,6 +2580,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-07",
     "type": "국내주식",
     "name": "ACE 미국대형가치주액티브",
@@ -2331,6 +2590,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-10",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -2340,6 +2600,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-10",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -2349,6 +2610,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-10",
     "type": "국내주식",
     "name": "RISE 중국본토CSI300",
@@ -2358,6 +2620,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-11",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -2367,6 +2630,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-11",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -2376,6 +2640,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-11",
     "type": "국내주식",
     "name": "KODEX 방산TOP10",
@@ -2385,6 +2650,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-12",
     "type": "국내주식",
     "name": "RISE 미국나스닥100",
@@ -2394,6 +2660,7 @@ const initialTransactions = [
     "exchangeRate": 1.0
   },
   {
+    "portfolio": "레버리지투자_마통_돈의심리학",
     "date": "2026-08-12",
     "type": "국내주식",
     "name": "TIGER 미국S&P500",
@@ -2401,5 +2668,325 @@ const initialTransactions = [
     "quantity": 2.0,
     "price": 27040.0,
     "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "MELI",
+    "code": "MELI",
+    "quantity": 1.0,
+    "price": 1642.0,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "NVDA",
+    "code": "NVDA",
+    "quantity": 2.0,
+    "price": 213.57,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "AMZN",
+    "code": "AMZN",
+    "quantity": 2.0,
+    "price": 270.79,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "GOOGL",
+    "code": "GOOGL",
+    "quantity": 1.0,
+    "price": 397.08,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "META",
+    "code": "META",
+    "quantity": 1.0,
+    "price": 607.02,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "PLTR",
+    "code": "PLTR",
+    "quantity": 4.0,
+    "price": 135.21,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "TSLA",
+    "code": "TSLA",
+    "quantity": 1.0,
+    "price": 422.97,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "ISRG",
+    "code": "ISRG",
+    "quantity": 2.0,
+    "price": 450.0,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "AXON",
+    "code": "AXON",
+    "quantity": 2.0,
+    "price": 403.54,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "SHOP",
+    "code": "SHOP",
+    "quantity": 5.0,
+    "price": 109.84,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "CRWD",
+    "code": "CRWD",
+    "quantity": 1.0,
+    "price": 525.29,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "DASH",
+    "code": "DASH",
+    "quantity": 3.0,
+    "price": 163.89,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "NET",
+    "code": "NET",
+    "quantity": 3.0,
+    "price": 196.72,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "AVGO",
+    "code": "AVGO",
+    "quantity": 1.0,
+    "price": 424.76,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "ANET",
+    "code": "ANET",
+    "quantity": 3.0,
+    "price": 141.44,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-11",
+    "type": "주식",
+    "name": "RKLB",
+    "code": "RKLB",
+    "quantity": 4.0,
+    "price": 102.9,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-26",
+    "type": "주식",
+    "name": "IBM",
+    "code": "IBM",
+    "quantity": 1.0,
+    "price": 254.7,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-26",
+    "type": "주식",
+    "name": "QBTS",
+    "code": "QBTS",
+    "quantity": 1.0,
+    "price": 27.22,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-26",
+    "type": "주식",
+    "name": "IONQ",
+    "code": "IONQ",
+    "quantity": 1.0,
+    "price": 61.6,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-05-27",
+    "type": "주식",
+    "name": "MRVL",
+    "code": "MRVL",
+    "quantity": 1.0,
+    "price": 199.7,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-06-01",
+    "type": "주식",
+    "name": "QBTS",
+    "code": "QBTS",
+    "quantity": 1.0,
+    "price": 28.7,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-06-04",
+    "type": "주식",
+    "name": "AVGO",
+    "code": "AVGO",
+    "quantity": 1.0,
+    "price": 405.0,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-06-05",
+    "type": "주식",
+    "name": "QBTS",
+    "code": "QBTS",
+    "quantity": 1.0,
+    "price": 27.0,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-06-10",
+    "type": "주식",
+    "name": "IBM",
+    "code": "IBM",
+    "quantity": 1.0,
+    "price": 269.3,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-06-11",
+    "type": "주식",
+    "name": "META",
+    "code": "META",
+    "quantity": 1.0,
+    "price": 563.0,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-06-15",
+    "type": "주식",
+    "name": "AMZN",
+    "code": "AMZN",
+    "quantity": 1.0,
+    "price": 243.5,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-06-26",
+    "type": "주식",
+    "name": "AVGO",
+    "code": "AVGO",
+    "quantity": 1.0,
+    "price": 366.8,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-07-20",
+    "type": "주식",
+    "name": "AMZN",
+    "code": "AMZN",
+    "quantity": 1.0,
+    "price": 248.0,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-08-05",
+    "type": "주식",
+    "name": "DDOG",
+    "code": "DDOG",
+    "quantity": 1.0,
+    "price": 294.0,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-08-06",
+    "type": "주식",
+    "name": "TOST",
+    "code": "TOST",
+    "quantity": 1.0,
+    "price": 34.46,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-08-06",
+    "type": "주식",
+    "name": "DDOG",
+    "code": "DDOG",
+    "quantity": 1.0,
+    "price": 238.81,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_마통_규칙파괴자",
+    "date": "2026-08-06",
+    "type": "주식",
+    "name": "TOST",
+    "code": "TOST",
+    "quantity": 1.0,
+    "price": 35.44,
+    "exchangeRate": 1415.35
   }
 ];
