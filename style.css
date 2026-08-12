@@ -30,6 +30,16 @@ body { margin: 0; background-color: #0b0c0e; font-family: "Pretendard", sans-ser
 .page { padding: 0 20px; }
 .section-title { font-weight: 800; font-size: 15px; color: var(--text-soft); margin: 24px 4px 12px; }
 
+/* 탭 및 필터 툴바 스타일 */
+.portfolio-tools { margin-bottom: 16px; display: flex; flex-direction: column; gap: 12px; }
+.view-toggles { display: flex; background: var(--surface-sub); border-radius: 12px; padding: 4px; }
+.view-toggles button { flex: 1; background: transparent; border: none; color: var(--text-soft); padding: 8px 0; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+.view-toggles button.active { background: var(--surface); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.filter-sort-row { display: flex; gap: 8px; }
+.filter-sort-row input { flex: 1; border: 1px solid var(--line); background: var(--surface-sub); color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 14px; outline: none; }
+.filter-sort-row select { width: 110px; border: 1px solid var(--line); background: var(--surface-sub); color: var(--text); padding: 10px; border-radius: 10px; font-size: 13px; outline: none; }
+.chart-container { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; min-height: 300px; display: flex; align-items: center; justify-content: center; }
+
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 14px; transition: background 0.2s; cursor: pointer; }
 .card:active { background: var(--surface-sub); }
 .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
