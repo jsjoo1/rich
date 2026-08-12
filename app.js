@@ -43,9 +43,9 @@ function render() {
         // [산식 반영] 국내주식: 구매단가*구매수량 / 해외주식: 구매단가*구매수량*구매당시 환율
         let amountKRW = isOverseas ? (tx.quantity * tx.price * tx.exchangeRate) : (tx.quantity * tx.price);
         
-        // 마통 이자 계산: 매수일부터 오늘까지의 일별 이자 누적
+        // 마통 이자 계산: 개별 매수일부터 오늘까지의 일별 이자 누적
         let txDate = new Date(tx.date);
-        let diffTime = today - txDate;
+        let diffTime = today.getTime() - txDate.getTime();
         let diffDays = diffTime > 0 ? Math.ceil(diffTime / (1000 * 60 * 60 * 24)) : 0;
         
         accruedInterest += amountKRW * (loanSettings.rate / 100) / 365 * diffDays;
@@ -87,7 +87,7 @@ function render() {
                     <span class="summary-value">${won(totalInvested)}</span>
                 </div>
                 <div class="summary-row">
-                    <span class="summary-label">누적 대출 이자 (실제 마통 반영 추정)</span>
+                    <span class="summary-label">누적 대출 이자 (추정)</span>
                     <span class="summary-value danger">-${won(accruedInterest)}</span>
                 </div>
                 <div class="summary-row" style="margin-top:12px; padding-top:12px; border-top:1px solid var(--line);">
@@ -98,7 +98,7 @@ function render() {
                     </span>
                 </div>
                 <div style="font-size:11px; color:var(--text-soft); text-align:right; margin-top:8px;">
-                   * 실시간 현재가 변동은 반영 전입니다.
+                   * 현재가 연동 전으로 시세 차익은 0원으로 반영되어 있습니다.
                 </div>
             </div>
         </div>
@@ -113,7 +113,7 @@ function render() {
     Object.keys(portfolio).forEach(name => {
         let p = portfolio[name];
         
-        if (p.quantity <= 0) return; // 보유 수량이 0 이하인 항목 필터링
+        if (p.quantity <= 0.0001) return; // 보유 수량이 0 이하인 항목 필터링 (소수점 오차 방지)
         activeStockCount++;
         
         // 평균 구매 단가: 해외주식은 달러($), 국내주식은 원(₩)
@@ -126,9 +126,9 @@ function render() {
                     <div class="card-name"><span class="tag-type">${p.type}</span> ${name}</div>
                 </div>
                 <div class="tx-row"><span>평균 구매단가</span> <span class="val">${displayPrice}</span></div>
-                <div class="tx-row"><span>보유 수량</span> <span class="val">${p.quantity.toLocaleString('ko-KR')}주</span></div>
+                <div class="tx-row"><span>보유 수량</span> <span class="val">${p.quantity.toLocaleString('en-US')}주</span></div>
                 <div class="tx-row" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 6px; margin-top: 6px;">
-                    <span>총 구매금액(환율 적용)</span> 
+                    <span>총 구매금액${p.isOverseas ? '(환율 적용)' : ''}</span> 
                     <span class="val" style="color:var(--text);">${won(p.totalAmountKRW)}</span>
                 </div>
             </div>
