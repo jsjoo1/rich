@@ -1,24 +1,36 @@
-// 초기 데이터 로드 (initial_data.js 연동)
+// 초기 데이터 로드
 let transactions = [];
 if (typeof initialTransactions !== 'undefined') {
   transactions = initialTransactions;
 }
 
-// 대출 설정 (마이너스 통장 연이율)
+// 대출 설정
 let loanSettings = {
     rate: 5.5, 
 };
 
-// UI 상태 관리 변수들
+// UI 상태 관리 변수
 let modal = null;
 let selectedStock = null; 
 let searchText = '';
-let sortBy = 'invested_desc'; // 'invested_desc', 'value_desc', 'name_asc'
-let viewMode = 'list'; // 'list' 또는 'chart'
-let chartInstance = null; // Chart.js 인스턴스
+let sortBy = 'invested_desc'; 
+let viewMode = 'list'; 
+let chartInstance = null; 
 
-function won(n) { return Math.round(n).toLocaleString('ko-KR') + '원'; }
+// 숫자에 콤마만 찍는 함수 (좁은 표에서 글자 수 절약을 위해 사용)
+function num(n) { return Math.round(n).toLocaleString('ko-KR'); }
+// 달러 표시 함수
 function usd(n) { return '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+// 수익/손실에 따른 색상 및 기호 반환 함수
+function getColorClass(val) {
+    if (val > 0) return 'c-up';
+    if (val < 0) return 'c-down';
+    return 'c-even';
+}
+function getSign(val) {
+    return val > 0 ? '+' : '';
+}
 
 // 과거 환율 불러오기 API
 async function fetchHistoricalRate(dateStr) {
@@ -32,13 +44,11 @@ async function fetchHistoricalRate(dateStr) {
     }
 }
 
-// Chart.js 텍스트 색상 (다크모드)
 if (typeof Chart !== 'undefined') {
     Chart.defaults.color = '#8f95b2';
 }
 
 function render() {
-    // 검색창 포커스 유지를 위한 변수
     let focusedElementId = null;
     let cursorPosition = 0;
     if (document.activeElement) {
@@ -70,7 +80,6 @@ function render() {
         if(!portfolio[tx.name]) {
             portfolio[tx.name] = { 
                 type: tx.type, 
-                code: tx.code, 
                 quantity: 0, 
                 totalAmountKRW: 0, 
                 totalAmountOriginal: 0, 
@@ -83,7 +92,7 @@ function render() {
         portfolio[tx.name].totalAmountOriginal += (tx.quantity * tx.price);
         portfolio[tx.name].totalAmountKRW += amountKRW;
         
-        // 현재 평가금액 (API 연동 전 임시 매수금액 매핑)
+        // *임시*: 현재가 API 연동 전이므로 평가금액 = 매수금액
         portfolio[tx.name].currentValueKRW += amountKRW; 
 
         totalInvested += amountKRW;
@@ -94,6 +103,7 @@ function render() {
     let netProfit = marketProfit - accruedInterest; 
     let realReturnRate = totalInvested > 0 ? (netProfit / totalInvested) * 100 : 0;
 
+    // 필터링 & 정렬
     let activeStocks = Object.keys(portfolio).filter(name => {
         let p = portfolio[name];
         return p.quantity > 0.0001 && name.toLowerCase().includes(searchText.toLowerCase());
@@ -108,47 +118,50 @@ function render() {
         return 0;
     });
 
+    let netProfitColor = getColorClass(netProfit);
+    let netProfitSign = getSign(netProfit);
+
+    // 상단 UI 생성
     let html = `
-        <div class="header-container">
-            <div class="top-bar">
-                <div class="app-title">주식 투자 수첩</div>
+        <div class="kw-summary">
+            <div class="kw-summary-title">
+                총 실질손익(원) 
+                <span style="font-size:11px; color:var(--text-soft); font-weight:400; margin-left:6px; background:var(--surface-sub); padding:2px 6px; border-radius:4px;">*대출이자 차감</span>
             </div>
-            
-            <div class="summary-card">
-                <div class="summary-row">
-                    <span class="summary-label">총 투자 원금</span>
-                    <span class="summary-value">${won(totalInvested)}</span>
+            <div class="kw-summary-main ${netProfitColor}">
+                <div class="val">${netProfitSign}${num(netProfit)}</div>
+                <div class="pct">${netProfitSign}${realReturnRate.toFixed(2)}%</div>
+            </div>
+            <div class="kw-summary-grid">
+                <div class="kw-sg-item">
+                    <span class="lbl">매입금액</span>
+                    <span class="val">${num(totalInvested)}</span>
                 </div>
-                <div class="summary-row">
-                    <span class="summary-label">총 평가 금액</span>
-                    <span class="summary-value">${won(totalCurrentValue)}</span>
+                <div class="kw-sg-item">
+                    <span class="lbl">평가금액</span>
+                    <span class="val">${num(totalCurrentValue)}</span>
                 </div>
-                <div class="summary-row">
-                    <span class="summary-label">누적 대출 이자 (추정)</span>
-                    <span class="summary-value danger">-${won(accruedInterest)}</span>
+                <div class="kw-sg-item">
+                    <span class="lbl">단순손익</span>
+                    <span class="val ${getColorClass(marketProfit)}">${getSign(marketProfit)}${num(marketProfit)}</span>
                 </div>
-                <div class="summary-row" style="margin-top:12px; padding-top:12px; border-top:1px solid var(--line);">
-                    <span class="summary-label">실질 수익률 (수익금 - 이자)</span>
-                    <span class="summary-value ${netProfit >= 0 ? 'ok' : 'danger'}">
-                        ${netProfit > 0 ? '+' : ''}${won(netProfit)}
-                        <span style="font-size:14px; font-weight:600; color:var(--text-soft);">(${realReturnRate > 0 ? '+' : ''}${realReturnRate.toFixed(2)}%)</span>
-                    </span>
+                <div class="kw-sg-item">
+                    <span class="lbl">누적대출이자</span>
+                    <span class="val" style="color:var(--text-soft); font-weight:400;">-${num(accruedInterest)}</span>
                 </div>
             </div>
         </div>
         
-        <div class="page">
-            <div class="section-title">보유 종목 현황 (${activeStocks.length}종목)</div>
-            
+        <div class="page" style="padding:0;">
             <div class="portfolio-tools">
                 <div class="view-toggles">
-                    <button class="${viewMode === 'list' ? 'active' : ''}" onclick="window.setViewMode('list')">리스트로 보기</button>
-                    <button class="${viewMode === 'chart' ? 'active' : ''}" onclick="window.setViewMode('chart')">파이 차트로 보기</button>
+                    <button class="${viewMode === 'list' ? 'active' : ''}" onclick="window.setViewMode('list')">일반 잔고</button>
+                    <button class="${viewMode === 'chart' ? 'active' : ''}" onclick="window.setViewMode('chart')">파이 차트</button>
                 </div>
                 <div class="filter-sort-row">
                     <input type="text" id="searchInput" placeholder="종목명 검색..." value="${searchText}" oninput="window.setSearchText(this.value)">
                     <select id="sortSelect" onchange="window.setSortBy(this.value)">
-                        <option value="invested_desc" ${sortBy === 'invested_desc' ? 'selected' : ''}>구매금액순</option>
+                        <option value="invested_desc" ${sortBy === 'invested_desc' ? 'selected' : ''}>매입금액순</option>
                         <option value="value_desc" ${sortBy === 'value_desc' ? 'selected' : ''}>평가금액순</option>
                         <option value="name_asc" ${sortBy === 'name_asc' ? 'selected' : ''}>종목명순</option>
                     </select>
@@ -156,37 +169,46 @@ function render() {
             </div>
     `;
 
+    // 리스트 모드 (키움 표 스타일)
     if (viewMode === 'list') {
+        html += `
+            <div class="kw-table">
+                <div class="kw-header">
+                    <div class="col-name">종목명</div>
+                    <div class="col-pnl">평가손익<br>수익률</div>
+                    <div class="col-qty">보유수량<br>평균단가</div>
+                    <div class="col-amt">매입금액<br>평가금액</div>
+                </div>
+        `;
+        
         activeStocks.forEach(name => {
             let p = portfolio[name];
             let avgPriceOriginal = p.totalAmountOriginal / p.quantity;
-            let displayPrice = p.isOverseas ? usd(avgPriceOriginal) : won(avgPriceOriginal);
+            let displayPrice = p.isOverseas ? usd(avgPriceOriginal) : num(avgPriceOriginal);
             
             let stockProfitKRW = p.currentValueKRW - p.totalAmountKRW;
             let stockReturnRate = p.totalAmountKRW > 0 ? (stockProfitKRW / p.totalAmountKRW) * 100 : 0;
             
+            let pColor = getColorClass(stockProfitKRW);
+            let pSign = getSign(stockProfitKRW);
+            
             html += `
-                <div class="card" onclick="openStockDetail('${name}')">
-                    <div class="card-top">
-                        <div class="card-name"><span class="tag-type">${p.type || '주식'}</span> ${name}</div>
-                        <div class="card-arrow">›</div>
+                <div class="kw-row" onclick="openStockDetail('${name}')">
+                    <div class="col-name">
+                        <span>${name}</span>
+                        <span class="ticker">${p.type || '주식'}</span>
                     </div>
-                    <div class="tx-row"><span>구매단가 (평균)</span> <span class="val">${displayPrice}</span></div>
-                    <div class="tx-row"><span>보유 수량</span> <span class="val">${p.quantity.toLocaleString('en-US', {maximumFractionDigits:4})}주</span></div>
-                    
-                    <div class="tx-row" style="border-top: 1px dashed var(--line); padding-top: 8px; margin-top: 8px;">
-                        <span>총 구매금액${p.isOverseas ? '(환율 적용)' : ''}</span> 
-                        <span class="val" style="color:var(--text);">${won(p.totalAmountKRW)}</span>
+                    <div class="col ${pColor}">
+                        <span>${pSign}${num(stockProfitKRW)}</span>
+                        <span>${pSign}${stockReturnRate.toFixed(2)}%</span>
                     </div>
-                    <div class="tx-row">
-                        <span>현재 평가금액</span> 
-                        <span class="val">${won(p.currentValueKRW)}</span>
+                    <div class="col col-qty">
+                        <span>${p.quantity.toLocaleString('en-US', {maximumFractionDigits:4})}</span>
+                        <span style="color:var(--text-soft); font-size:12px;">${displayPrice}</span>
                     </div>
-                    <div class="tx-row">
-                        <span>수익률 (평가)</span> 
-                        <span class="val ${stockReturnRate > 0 ? 'ok' : (stockReturnRate < 0 ? 'danger' : '')}">
-                            ${stockReturnRate > 0 ? '+' : ''}${stockReturnRate.toFixed(2)}%
-                        </span>
+                    <div class="col col-amt">
+                        <span style="color:var(--text-soft);">${num(p.totalAmountKRW)}</span>
+                        <span>${num(p.currentValueKRW)}</span>
                     </div>
                 </div>
             `;
@@ -195,7 +217,11 @@ function render() {
         if(activeStocks.length === 0) {
             html += `<div style="text-align:center; padding: 40px 0; color: var(--text-soft); font-size:14px;">조건에 맞는 종목이 없습니다.</div>`;
         }
-    } else if (viewMode === 'chart') {
+        
+        html += `</div>`; // .kw-table
+    } 
+    // 차트 모드
+    else if (viewMode === 'chart') {
         html += `
             <div class="chart-container">
                 ${activeStocks.length > 0 ? '<canvas id="portfolioChart"></canvas>' : '<div style="color:var(--text-soft); font-size:14px;">표시할 데이터가 없습니다.</div>'}
@@ -206,41 +232,49 @@ function render() {
     html += `</div>`;
     html += `<button class="fab" id="fabAdd">+</button>`;
 
-    // 4. 모달창 렌더링
+    // 전체 모달창 영역
     if(modal === 'add') {
+        let pName = selectedStock || '';
+        let pType = '국내주식';
+        if (selectedStock && portfolio[selectedStock]) {
+            pType = portfolio[selectedStock].isOverseas ? '주식(해외)' : '국내주식';
+        }
+
         html += `
             <div class="overlay" id="ovAdd">
                 <div class="sheet">
-                    <div class="sheet-title">새로운 종목 추가<button class="close" onclick="closeModal()">✕</button></div>
+                    <div class="sheet-title">새 종목 기록<button class="close" onclick="closeModal()">✕</button></div>
                     <div class="field"><label>날짜</label><input type="date" id="addDate" value="${new Date().toISOString().split('T')[0]}"></div>
                     <div class="field"><label>구분</label>
                         <select id="addType">
-                            <option value="국내주식">국내주식</option>
-                            <option value="주식(해외)">주식(해외)</option>
+                            <option value="국내주식" ${pType === '국내주식' ? 'selected' : ''}>국내주식</option>
+                            <option value="주식(해외)" ${pType === '주식(해외)' ? 'selected' : ''}>주식(해외)</option>
                         </select>
                     </div>
-                    <div class="field"><label>종목명</label><input type="text" id="addName" placeholder="예: AAPL"></div>
-                    <div class="field"><label>구매 수량</label><input type="number" step="0.0001" id="addQty" placeholder="0"></div>
-                    <div class="field"><label>구매 단가</label><input type="number" step="0.01" id="addPrice" placeholder="0"></div>
+                    <div class="field"><label>종목명</label><input type="text" id="addName" placeholder="예: 삼성전자" value="${pName}"></div>
+                    <div class="field"><label>수량 (매도 시 음수 입력)</label><input type="number" step="0.0001" id="addQty" placeholder="예: 매수 10 / 매도 -5"></div>
+                    <div class="field"><label>거래 단가</label><input type="number" step="0.01" id="addPrice" placeholder="0"></div>
                     
-                    <div class="field" id="rateFieldWrap" style="display:none;">
-                        <label>환율 (선택한 날짜 기준 자동 불러오기)</label>
+                    <div class="field" id="rateFieldWrap" style="${pType === '주식(해외)' ? 'display:block;' : 'display:none;'}">
+                        <label>환율 (선택일 자동조회)</label>
                         <input type="number" step="0.1" id="addRate" value="1300.0">
-                        <div style="font-size:11px; color:var(--text-soft); margin-top:4px;" id="rateMsg">환율 정보를 불러오는 중...</div>
+                        <div style="font-size:11px; color:var(--text-soft); margin-top:4px;" id="rateMsg">환율 정보 조회 중...</div>
                     </div>
 
-                    <button class="primary-btn" onclick="submitAdd()">새 종목 기록하기</button>
+                    <button class="primary-btn" onclick="submitAdd()">기록 추가</button>
                 </div>
             </div>
         `;
-    } else if (modal === 'detail' && selectedStock) {
+    } 
+    // 개별 주식 클릭 시 (입력 폼 + 매매기록)
+    else if (modal === 'detail' && selectedStock) {
         let pInfo = portfolio[selectedStock] || { isOverseas: false };
         let stockTxs = transactions.filter(tx => tx.name === selectedStock).sort((a,b) => new Date(b.date) - new Date(a.date));
         
         let listHtml = stockTxs.map(tx => {
             let isOvs = tx.type === '주식' || tx.type.includes('해외') || tx.exchangeRate > 100 || tx.name.includes('달러');
-            let pStr = isOvs ? usd(tx.price) : won(tx.price);
-            let actionType = tx.quantity > 0 ? '<span style="color:var(--danger)">매수</span>' : '<span style="color:var(--primary)">매도</span>';
+            let pStr = isOvs ? usd(tx.price) : num(tx.price)+'원';
+            let actionType = tx.quantity > 0 ? '<span class="c-up">매수</span>' : '<span class="c-down">매도</span>';
             
             return `
                 <div class="detail-tx-item">
@@ -253,29 +287,33 @@ function render() {
             `;
         }).join('');
 
-        // 종목 클릭 시 바로 추가할 수 있도록 상단에 폼 내장
         html += `
             <div class="overlay" id="ovDetail">
                 <div class="sheet">
-                    <div class="sheet-title">${selectedStock}<button class="close" onclick="closeModal()">✕</button></div>
+                    <div class="sheet-title" style="margin-bottom:20px;">
+                        <div>
+                            <div style="font-size:20px;">${selectedStock}</div>
+                            <div style="font-size:12px; color:var(--text-soft); font-weight:400; margin-top:4px;">매매 기록 상세</div>
+                        </div>
+                        <button class="close" onclick="closeModal()">✕</button>
+                    </div>
                     
-                    <div style="background: var(--surface-sub); padding: 16px; border-radius: 16px; margin-bottom: 24px; border: 1px solid var(--primary);">
-                        <div style="font-size: 14px; font-weight: 800; margin-bottom: 12px; color: var(--primary);">+ 신규 매수/매도 추가</div>
-                        <div class="field"><label>날짜</label><input type="date" id="detailAddDate" value="${new Date().toISOString().split('T')[0]}"></div>
-                        <div class="field"><label>수량 (매도 시 -음수 입력)</label><input type="number" step="0.0001" id="detailAddQty" placeholder="예: 10 또는 -5"></div>
-                        <div class="field"><label>단가</label><input type="number" step="0.01" id="detailAddPrice" placeholder="0"></div>
+                    <div style="background: var(--surface-sub); padding: 16px 16px 4px; border-radius: 16px; margin-bottom: 24px;">
+                        <div style="font-size: 13px; font-weight: 800; margin-bottom: 12px; color: var(--text);">📝 이 종목 신규 기록 추가</div>
+                        <div class="filter-sort-row" style="margin-bottom:8px;">
+                            <input type="date" id="detailAddDate" value="${new Date().toISOString().split('T')[0]}" style="flex:1;">
+                            <input type="number" step="0.0001" id="detailAddQty" placeholder="수량 (-매도)" style="flex:1;">
+                        </div>
+                        <div class="filter-sort-row" style="margin-bottom:12px;">
+                            <input type="number" step="0.01" id="detailAddPrice" placeholder="거래 단가" style="flex:1;">
+                            ${pInfo.isOverseas ? `<input type="number" step="0.1" id="detailAddRate" value="1300" style="flex:1;" title="환율">` : `<input type="hidden" id="detailAddRate" value="1.0">`}
+                        </div>
+                        ${pInfo.isOverseas ? `<div style="font-size:11px; color:var(--text-soft); text-align:right; margin-bottom:12px;" id="detailRateMsg">환율 확인 중...</div>` : ''}
                         
-                        ${pInfo.isOverseas ? `
-                        <div class="field" id="detailRateFieldWrap">
-                            <label>환율 (선택 날짜 자동 조회)</label>
-                            <input type="number" step="0.1" id="detailAddRate" value="1300.0">
-                            <div style="font-size:11px; color:var(--text-soft); margin-top:4px;" id="detailRateMsg">환율 확인 중...</div>
-                        </div>` : `<input type="hidden" id="detailAddRate" value="1.0">`}
-                        
-                        <button class="primary-btn" onclick="submitDetailAdd()" style="margin-top: 4px;">기록 추가하기</button>
+                        <button class="primary-btn" onclick="submitDetailAdd()" style="margin-top: 0; margin-bottom: 12px;">기록 추가하기</button>
                     </div>
 
-                    <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">최근 매매 기록</div>
+                    <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">최근 체결 내역</div>
                     <div class="detail-tx-list">
                         ${listHtml}
                     </div>
@@ -286,7 +324,7 @@ function render() {
 
     app.innerHTML = html;
 
-    // 포커스 복원 (검색창 텍스트 입력 끊김 방지)
+    // 포커스 복원
     if (focusedElementId) {
         let el = document.getElementById(focusedElementId);
         if (el) {
@@ -301,7 +339,7 @@ function render() {
         renderChart(activeStocks, portfolio);
     }
 
-    // 하단 FAB 버튼: 완전 새로운 종목 등록 시 사용
+    // 클릭 이벤트
     let fab = document.getElementById('fabAdd');
     if(fab) fab.onclick = () => { selectedStock = null; modal = 'add'; render(); setTimeout(bindModalEvents, 50); };
     
@@ -316,15 +354,14 @@ window.setViewMode = function(mode) { viewMode = mode; render(); }
 window.setSearchText = function(text) { searchText = text; render(); }
 window.setSortBy = function(sort) { sortBy = sort; render(); }
 
-// 상세 모달 열기 및 환율 이벤트 바인딩
 window.openStockDetail = function(name) {
     selectedStock = name;
     modal = 'detail';
     render();
-    setTimeout(bindDetailRateEvent, 50); // 모달 열린 직후 환율 체크
+    setTimeout(bindDetailRateEvent, 50);
 }
 
-// 상세 모달 내 신규 기록 폼 등록 기능
+// 상세 모달에서 기록 추가 제출
 window.submitDetailAdd = function() {
     let date = document.getElementById('detailAddDate').value;
     let qty = Number(document.getElementById('detailAddQty').value);
@@ -336,7 +373,6 @@ window.submitDetailAdd = function() {
         return;
     }
     
-    // 기존 종목의 타입을 그대로 복사
     let pObj = transactions.find(t => t.name === selectedStock);
     let type = pObj ? pObj.type : '국내주식';
 
@@ -351,12 +387,11 @@ window.submitDetailAdd = function() {
         exchangeRate: type.includes('해외') || type === '주식' ? rate : 1.0
     });
 
-    render(); // 창을 닫지 않고 다시 그려서 즉시 반영된 것을 보여줌
+    render(); 
     showToast('매매 기록이 추가되었습니다.');
     setTimeout(bindDetailRateEvent, 50);
 }
 
-// 상세 모달 안의 환율 자동 조회
 function bindDetailRateEvent() {
     const dateInput = document.getElementById('detailAddDate');
     const rateInput = document.getElementById('detailAddRate');
@@ -365,15 +400,15 @@ function bindDetailRateEvent() {
     if(!rateInput || rateInput.type === 'hidden') return;
 
     async function checkRate() {
-        rateMsg.textContent = '선택한 날짜의 환율 조회 중...';
+        rateMsg.textContent = '선택일 환율 조회 중...';
         rateMsg.style.color = 'var(--text-soft)';
         const rate = await fetchHistoricalRate(dateInput.value);
         if(rate) {
             rateInput.value = rate;
-            rateMsg.textContent = `${dateInput.value} 기준 환율(${rate}원) 적용 완료.`;
+            rateMsg.textContent = `(${dateInput.value} 환율 ${rate}원 적용됨)`;
             rateMsg.style.color = 'var(--ok)';
         } else {
-            rateMsg.textContent = '환율 조회 실패. 수동으로 입력해주세요.';
+            rateMsg.textContent = '조회 실패. 직접 입력해주세요.';
             rateMsg.style.color = 'var(--danger)';
         }
     }
@@ -429,16 +464,16 @@ function bindModalEvents() {
     async function checkRate() {
         if (addType.value.includes('해외')) {
             rateFieldWrap.style.display = 'block';
-            rateMsg.textContent = '선택한 날짜의 환율 정보를 불러오는 중...';
+            rateMsg.textContent = '환율 정보 조회 중...';
             rateMsg.style.color = 'var(--text-soft)';
             
             const rate = await fetchHistoricalRate(addDate.value);
             if (rate) {
                 addRate.value = rate;
-                rateMsg.textContent = `${addDate.value} 기준 실제 환율(${rate}원)이 적용되었습니다.`;
+                rateMsg.textContent = `(${addDate.value} 환율 ${rate}원 적용됨)`;
                 rateMsg.style.color = 'var(--ok)';
             } else {
-                rateMsg.textContent = '환율을 불러오지 못했습니다. 수동으로 입력해주세요.';
+                rateMsg.textContent = '조회 실패. 직접 입력해주세요.';
                 rateMsg.style.color = 'var(--danger)';
             }
         } else {
@@ -483,7 +518,7 @@ window.submitAdd = function() {
     });
 
     closeModal();
-    showToast('새로운 종목이 기록되었습니다.');
+    showToast('새로운 종목이 추가되었습니다.');
 }
 
 function showToast(msg) {
