@@ -36,7 +36,7 @@ async function fetchHistoricalRate(dateStr) {
 Chart.defaults.color = '#8f95b2';
 
 function render() {
-    // 검색창 포커스 유지를 위한 꼼수
+    // 검색창 포커스 유지를 위한 변수
     let focusedElementId = null;
     let cursorPosition = 0;
     if (document.activeElement) {
@@ -72,7 +72,7 @@ function render() {
                 quantity: 0, 
                 totalAmountKRW: 0, 
                 totalAmountOriginal: 0, 
-                currentValueKRW: 0, // 평가금액 필드 추가
+                currentValueKRW: 0, 
                 isOverseas: isOverseas
             };
         }
@@ -81,7 +81,7 @@ function render() {
         portfolio[tx.name].totalAmountOriginal += (tx.quantity * tx.price);
         portfolio[tx.name].totalAmountKRW += amountKRW;
         
-        // *임시 설정* : 구글 파이낸스 연결 전이므로 평가금액을 매수금액과 동일하게 취급합니다.
+        // 임시 설정: 구글 파이낸스 연결 전이므로 평가금액을 매수금액과 동일하게 취급
         portfolio[tx.name].currentValueKRW += amountKRW; 
 
         totalInvested += amountKRW;
@@ -103,7 +103,7 @@ function render() {
         let pB = portfolio[b];
         if (sortBy === 'name_asc') return a.localeCompare(b);
         if (sortBy === 'invested_desc') return pB.totalAmountKRW - pA.totalAmountKRW;
-        if (sortBy === 'value_desc') return pB.currentValueKRW - pA.currentValueKRW; // 현재는 구매금액과 동일
+        if (sortBy === 'value_desc') return pB.currentValueKRW - pA.currentValueKRW; 
         return 0;
     });
 
@@ -139,7 +139,6 @@ function render() {
         <div class="page">
             <div class="section-title">보유 종목 현황 (${activeStocks.length}종목)</div>
             
-            <!-- 필터 & 뷰 모드 툴바 -->
             <div class="portfolio-tools">
                 <div class="view-toggles">
                     <button class="${viewMode === 'list' ? 'active' : ''}" onclick="window.setViewMode('list')">리스트로 보기</button>
@@ -208,22 +207,29 @@ function render() {
 
     // 모달창 렌더링
     if(modal === 'add') {
+        // 선택된 주식이 있으면 이름과 구분을 자동 셋팅
+        let pName = selectedStock || '';
+        let pType = '국내주식';
+        if (selectedStock && portfolio[selectedStock]) {
+            pType = portfolio[selectedStock].isOverseas ? '주식(해외)' : '국내주식';
+        }
+
         html += `
             <div class="overlay" id="ovAdd">
                 <div class="sheet">
-                    <div class="sheet-title">매수 내역 추가<button class="close" onclick="closeModal()">✕</button></div>
+                    <div class="sheet-title">매수(매도) 내역 추가<button class="close" onclick="closeModal()">✕</button></div>
                     <div class="field"><label>날짜</label><input type="date" id="addDate" value="${new Date().toISOString().split('T')[0]}"></div>
                     <div class="field"><label>구분</label>
                         <select id="addType">
-                            <option value="국내주식">국내주식</option>
-                            <option value="주식(해외)">주식(해외)</option>
+                            <option value="국내주식" ${pType === '국내주식' ? 'selected' : ''}>국내주식</option>
+                            <option value="주식(해외)" ${pType === '주식(해외)' ? 'selected' : ''}>주식(해외)</option>
                         </select>
                     </div>
-                    <div class="field"><label>종목명</label><input type="text" id="addName" placeholder="예: AAPL"></div>
-                    <div class="field"><label>구매 수량</label><input type="number" step="0.0001" id="addQty" placeholder="0"></div>
-                    <div class="field"><label>구매 단가</label><input type="number" step="0.01" id="addPrice" placeholder="0"></div>
+                    <div class="field"><label>종목명</label><input type="text" id="addName" placeholder="예: AAPL" value="${pName}"></div>
+                    <div class="field"><label>수량 (매도 시 음수 입력)</label><input type="number" step="0.0001" id="addQty" placeholder="예: 매수 10 / 매도 -5"></div>
+                    <div class="field"><label>거래 단가</label><input type="number" step="0.01" id="addPrice" placeholder="0"></div>
                     
-                    <div class="field" id="rateFieldWrap" style="display:none;">
+                    <div class="field" id="rateFieldWrap" style="${pType === '주식(해외)' ? 'display:block;' : 'display:none;'}">
                         <label>환율 (선택한 날짜 기준 자동 불러오기)</label>
                         <input type="number" step="0.1" id="addRate" value="1300.0">
                         <div style="font-size:11px; color:var(--text-soft); margin-top:4px;" id="rateMsg">환율 정보를 불러오는 중...</div>
@@ -252,10 +258,12 @@ function render() {
             `;
         }).join('');
 
+        // 상세 모달 상단에 '이 종목 추가 기록' 버튼 추가
         html += `
             <div class="overlay" id="ovDetail">
                 <div class="sheet">
                     <div class="sheet-title">${selectedStock} 매매 기록<button class="close" onclick="closeModal()">✕</button></div>
+                    <button class="primary-btn" onclick="openAddForSelected()" style="margin-bottom: 16px;">+ 이 종목 추가 기록</button>
                     <div class="detail-tx-list">
                         ${listHtml}
                     </div>
@@ -266,7 +274,6 @@ function render() {
 
     app.innerHTML = html;
 
-    // 포커스 복원 (검색창 연속 타이핑 시 끊김 방지)
     if (focusedElementId) {
         let el = document.getElementById(focusedElementId);
         if (el) {
@@ -277,14 +284,13 @@ function render() {
         }
     }
 
-    // 차트 모드일 때 파이 차트 그리기
     if (viewMode === 'chart' && activeStocks.length > 0) {
         renderChart(activeStocks, portfolio);
     }
 
-    // 이벤트 리스너 바인딩
+    // 하단 FAB 버튼 클릭 시 기존 선택 초기화
     let fab = document.getElementById('fabAdd');
-    if(fab) fab.onclick = () => { modal = 'add'; render(); setTimeout(bindModalEvents, 50); };
+    if(fab) fab.onclick = () => { selectedStock = null; modal = 'add'; render(); setTimeout(bindModalEvents, 50); };
     
     let ovAdd = document.getElementById('ovAdd');
     if(ovAdd) ovAdd.onclick = (e) => { if(e.target === ovAdd) closeModal(); };
@@ -293,20 +299,30 @@ function render() {
     if(ovDetail) ovDetail.onclick = (e) => { if(e.target === ovDetail) closeModal(); };
 }
 
-// 툴바 제어 함수들 (전역 스코프 등록)
 window.setViewMode = function(mode) { viewMode = mode; render(); }
 window.setSearchText = function(text) { searchText = text; render(); }
 window.setSortBy = function(sort) { sortBy = sort; render(); }
 
-// 파이 차트 렌더링 함수
+// 상세 모달 내에서 추가 버튼 클릭 시
+window.openAddForSelected = function() {
+    modal = 'add';
+    render();
+    setTimeout(bindModalEvents, 50);
+}
+
+// 상세 모달 열기
+window.openStockDetail = function(name) {
+    selectedStock = name;
+    modal = 'detail';
+    render();
+}
+
 function renderChart(stocks, portfolioData) {
     let ctx = document.getElementById('portfolioChart').getContext('2d');
-    if (chartInstance) chartInstance.destroy(); // 기존 차트 파괴
+    if (chartInstance) chartInstance.destroy(); 
 
-    // 상위 10개만 색상을 다르게 하고 나머지는 '기타'로 묶거나 그냥 다 보여줌
     let labels = stocks;
     let data = stocks.map(name => portfolioData[name].currentValueKRW);
-    // 무지개색 자동 분배
     let bgColors = stocks.map((_, i) => `hsl(${(i * 360 / stocks.length) % 360}, 70%, 60%)`);
 
     chartInstance = new Chart(ctx, {
@@ -339,19 +355,15 @@ function renderChart(stocks, portfolioData) {
     });
 }
 
-// 상세 모달 열기
-window.openStockDetail = function(name) {
-    selectedStock = name;
-    modal = 'detail';
-    render();
-}
-
 function bindModalEvents() {
     const addType = document.getElementById('addType');
     const addDate = document.getElementById('addDate');
     const rateFieldWrap = document.getElementById('rateFieldWrap');
     const addRate = document.getElementById('addRate');
     const rateMsg = document.getElementById('rateMsg');
+
+    // 해외 주식이 초기 셋팅되어 있을 수 있으므로 진입 시 한번 실행
+    checkRate();
 
     async function checkRate() {
         if (addType.value.includes('해외')) {
@@ -409,7 +421,7 @@ window.submitAdd = function() {
     });
 
     closeModal();
-    showToast('매수 내역이 기록되었습니다.');
+    showToast('내역이 기록되었습니다.');
 }
 
 function showToast(msg) {
