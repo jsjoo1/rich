@@ -2988,5 +2988,1545 @@ const initialTransactions = [
     "quantity": 1.0,
     "price": 35.44,
     "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-01-21",
+    "type": "주식",
+    "name": "GOOGL",
+    "code": "",
+    "quantity": 1.0,
+    "price": 320.07,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-01-21",
+    "type": "주식",
+    "name": "MSFT",
+    "code": "",
+    "quantity": 1.0,
+    "price": 449.0,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-01-22",
+    "type": "주식",
+    "name": "AMZN",
+    "code": "",
+    "quantity": 1.0,
+    "price": 231.0,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-01-23",
+    "type": "코인",
+    "name": "BTC-krw",
+    "code": "",
+    "quantity": 0.00377014,
+    "price": 132257974.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-01-23",
+    "type": "코인",
+    "name": "eth-krw",
+    "code": "",
+    "quantity": 0.11468363,
+    "price": 4350000.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-01-24",
+    "type": "코인",
+    "name": "BTC-krw",
+    "code": "",
+    "quantity": 0.00151332,
+    "price": 131830000.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-01-24",
+    "type": "코인",
+    "name": "eth-krw",
+    "code": "",
+    "quantity": 0.04588345,
+    "price": 4348000.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-01-27",
+    "type": "주식",
+    "name": "TSLA",
+    "code": "",
+    "quantity": 1.0,
+    "price": 437.59,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-01-28",
+    "type": "국내주식",
+    "name": "KRX:0150K0",
+    "code": "",
+    "quantity": 15.0,
+    "price": 12800.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-01-28",
+    "type": "주식",
+    "name": "TSLA",
+    "code": "",
+    "quantity": 1.0,
+    "price": 431.0,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-01-29",
+    "type": "주식",
+    "name": "msft",
+    "code": "",
+    "quantity": 1.0,
+    "price": 449.57,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-01-29",
+    "type": "주식",
+    "name": "amzn",
+    "code": "",
+    "quantity": 1.0,
+    "price": 242.0,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-01-29",
+    "type": "주식",
+    "name": "msft",
+    "code": "",
+    "quantity": 1.0,
+    "price": 446.0,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-01-29",
+    "type": "주식",
+    "name": "nflx",
+    "code": "",
+    "quantity": 1.0,
+    "price": 84.39,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-02-03",
+    "type": "국내주식",
+    "name": "KRX:0150K0",
+    "code": "",
+    "quantity": 1.0,
+    "price": 12720.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-04",
+    "type": "국내주식",
+    "name": "KRX:0150K0",
+    "code": "",
+    "quantity": -15.0,
+    "price": 12280.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-04",
+    "type": "국내주식",
+    "name": "KRX:396500",
+    "code": "",
+    "quantity": 1.0,
+    "price": 30990.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-12",
+    "type": "코인",
+    "name": "BTC-krw",
+    "code": "",
+    "quantity": -0.00098173,
+    "price": 101866000.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-16",
+    "type": "코인",
+    "name": "BTC-krw",
+    "code": "",
+    "quantity": -0.00203012,
+    "price": 108368000.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-19",
+    "type": "국내주식",
+    "name": "KOSDAQ:263750",
+    "code": "",
+    "quantity": 1.0,
+    "price": 46600.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-19",
+    "type": "코인",
+    "name": "eth-krw",
+    "code": "",
+    "quantity": -0.16056708,
+    "price": 3268000.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-19",
+    "type": "국내주식",
+    "name": "KRX:005930",
+    "code": "",
+    "quantity": 1.0,
+    "price": 202000.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-19",
+    "type": "국내주식",
+    "name": "KOSDAQ:056360",
+    "code": "",
+    "quantity": 1.0,
+    "price": 6060.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-10",
+    "type": "현금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 449871.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-20",
+    "type": "현금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": -25140.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-20",
+    "type": "국내주식",
+    "name": "KRX:437370",
+    "code": "",
+    "quantity": 1.0,
+    "price": 11350.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-20",
+    "type": "국내주식",
+    "name": "KRX:0080G0",
+    "code": "",
+    "quantity": 1.0,
+    "price": 13790.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-20",
+    "type": "국내주식",
+    "name": "KOSDAQ:263750",
+    "code": "",
+    "quantity": 1.0,
+    "price": 41000.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-23",
+    "type": "국내주식",
+    "name": "KRX:368590",
+    "code": "",
+    "quantity": 1.0,
+    "price": 26460.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-23",
+    "type": "국내주식",
+    "name": "KRX:0080G0",
+    "code": "",
+    "quantity": 1.0,
+    "price": 12730.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-24",
+    "type": "국내주식",
+    "name": "KRX:437370",
+    "code": "",
+    "quantity": 1.0,
+    "price": 11140.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-24",
+    "type": "국내주식",
+    "name": "KRX:396500",
+    "code": "",
+    "quantity": 1.0,
+    "price": 32200.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-24",
+    "type": "현금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": -123530.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-25",
+    "type": "국내주식",
+    "name": "KRX:368590",
+    "code": "",
+    "quantity": 1.0,
+    "price": 26685.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-25",
+    "type": "현금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": -26685.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-25",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 16900.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-25",
+    "type": "현금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": -7340.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-25",
+    "type": "국내주식",
+    "name": "KOSDAQ:056360",
+    "code": "",
+    "quantity": 1.0,
+    "price": 7340.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-25",
+    "type": "코인",
+    "name": "BTC-krw",
+    "code": "",
+    "quantity": -0.00463432,
+    "price": 106800000.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-25",
+    "type": "현금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 50000.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-25",
+    "type": "주식",
+    "name": "GOOGL",
+    "code": "",
+    "quantity": 1.0,
+    "price": 294.0,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-02-05",
+    "type": "코인",
+    "name": "BTC-krw",
+    "code": "",
+    "quantity": 0.00015636,
+    "price": 105547000.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-25",
+    "type": "현금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": -39110.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-26",
+    "type": "국내주식",
+    "name": "KRX:396500",
+    "code": "",
+    "quantity": 1.0,
+    "price": 32150.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-26",
+    "type": "국내주식",
+    "name": "KOSDAQ:056360",
+    "code": "",
+    "quantity": 1.0,
+    "price": 6960.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-27",
+    "type": "국내주식",
+    "name": "KRX:396500",
+    "code": "",
+    "quantity": 1.0,
+    "price": 30170.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-27",
+    "type": "국내주식",
+    "name": "KRX:368590",
+    "code": "",
+    "quantity": 1.0,
+    "price": 26340.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-27",
+    "type": "현금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": -56510.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-30",
+    "type": "국내주식",
+    "name": "KRX:469150",
+    "code": "",
+    "quantity": 1.0,
+    "price": 42400.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-30",
+    "type": "국내주식",
+    "name": "KRX:091170",
+    "code": "",
+    "quantity": 1.0,
+    "price": 14520.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-30",
+    "type": "현금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": -100250.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-30",
+    "type": "국내주식",
+    "name": "KRX:463300",
+    "code": "",
+    "quantity": 1.0,
+    "price": 13620.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-30",
+    "type": "국내주식",
+    "name": "KRX:396500",
+    "code": "",
+    "quantity": 1.0,
+    "price": 29710.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-31",
+    "type": "국내주식",
+    "name": "KRX:463300",
+    "code": "",
+    "quantity": 1.0,
+    "price": 13625.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-31",
+    "type": "국내주식",
+    "name": "KRX:0080G0",
+    "code": "",
+    "quantity": 1.0,
+    "price": 12530.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-31",
+    "type": "국내주식",
+    "name": "KRX:091170",
+    "code": "",
+    "quantity": 1.0,
+    "price": 14330.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-31",
+    "type": "국내주식",
+    "name": "KRX:469150",
+    "code": "",
+    "quantity": 1.0,
+    "price": 39950.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-03-31",
+    "type": "현금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": -80435.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-04-01",
+    "type": "국내주식",
+    "name": "KRX:360750",
+    "code": "",
+    "quantity": 1.0,
+    "price": 24480.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-04-01",
+    "type": "국내주식",
+    "name": "KRX:437370",
+    "code": "",
+    "quantity": 1.0,
+    "price": 11615.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-04-01",
+    "type": "국내주식",
+    "name": "KOSDAQ:056360",
+    "code": "",
+    "quantity": 1.0,
+    "price": 6900.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-04-01",
+    "type": "현금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": -42995.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-04-02",
+    "type": "국내주식",
+    "name": "KRX:396500",
+    "code": "",
+    "quantity": 1.0,
+    "price": 29940.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-04-02",
+    "type": "현금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": -14789.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-04-29",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 74976.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-04-30",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 33885.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-05-06",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 16438.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-05-20",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 16505.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-05-20",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 6238.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-05-20",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 6208.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-05-28",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 29905.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-06-05",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 18934.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-06-05",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 23725.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-06-23",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 27894.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-06-29",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 23174.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-06-30",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 4611.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-07-01",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": -31062.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-07-01",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": -30862.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-07-01",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 2125.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-07-01",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 2256.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-07-06",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 5270.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-07-06",
+    "type": "공모주 손익",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 3700.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-08-04",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 22110.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-08-04",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 540.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-08-04",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 130.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-08-04",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 900.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-08-04",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 1265.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-08-04",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 2088.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-08-04",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 1938.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-07-02",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 4950.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-07-02",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 770.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-06-30",
+    "type": "배당금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 375.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-06-02",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 464.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-05-29",
+    "type": "배당금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 744.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-05-06",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 1541.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-05-06",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 600.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-05-06",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 13640.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-05-06",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 480.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-05-06",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 177.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-04-02",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 2400.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-02-03",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 1320.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-02-03",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 13325.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "레버리지투자_예담대",
+    "date": "2026-01-05",
+    "type": "분배금",
+    "name": "현금",
+    "code": "",
+    "quantity": 1.0,
+    "price": 2444.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-02-26",
+    "type": "",
+    "name": "달러",
+    "code": "",
+    "quantity": 1.0,
+    "price": 7.03,
+    "exchangeRate": 7.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-02-24",
+    "type": "",
+    "name": "KRX:360750",
+    "code": "",
+    "quantity": 1.0,
+    "price": 24560.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-02-24",
+    "type": "",
+    "name": "CMCSA",
+    "code": "",
+    "quantity": 1.0,
+    "price": 31.14,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-02-24",
+    "type": "",
+    "name": "MANU",
+    "code": "",
+    "quantity": 1.0,
+    "price": 17.38,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-02-24",
+    "type": "",
+    "name": "PFE",
+    "code": "",
+    "quantity": 1.0,
+    "price": 27.06,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-02-25",
+    "type": "",
+    "name": "KRX:437370",
+    "code": "",
+    "quantity": 1.0,
+    "price": 11220.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-02-25",
+    "type": "",
+    "name": "KRX:218420",
+    "code": "",
+    "quantity": 1.0,
+    "price": 18330.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-02-26",
+    "type": "",
+    "name": "KOSDAQ:056360",
+    "code": "",
+    "quantity": 1.0,
+    "price": 5540.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-02-26",
+    "type": "",
+    "name": "KRX:360750",
+    "code": "",
+    "quantity": 1.0,
+    "price": 24525.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-02-26",
+    "type": "",
+    "name": "KRX:437370",
+    "code": "",
+    "quantity": 1.0,
+    "price": 11190.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-02-26",
+    "type": "",
+    "name": "KRX:218420",
+    "code": "",
+    "quantity": 1.0,
+    "price": 18135.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-03",
+    "type": "",
+    "name": "KRX:396500",
+    "code": "",
+    "quantity": 1.0,
+    "price": 34195.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-03",
+    "type": "",
+    "name": "KRX:396500",
+    "code": "",
+    "quantity": 1.0,
+    "price": 33470.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-04",
+    "type": "",
+    "name": "KRX:218420",
+    "code": "",
+    "quantity": -2.0,
+    "price": 19620.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-04",
+    "type": "",
+    "name": "KRX:396500",
+    "code": "",
+    "quantity": 1.0,
+    "price": 31650.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-04",
+    "type": "",
+    "name": "KRX:005930",
+    "code": "",
+    "quantity": 1.0,
+    "price": 180000.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-05",
+    "type": "",
+    "name": "KRX:360750",
+    "code": "",
+    "quantity": 1.0,
+    "price": 24980.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-09",
+    "type": "",
+    "name": "KRX:360750",
+    "code": "",
+    "quantity": 1.0,
+    "price": 24530.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-10",
+    "type": "",
+    "name": "KRX:360750",
+    "code": "",
+    "quantity": 1.0,
+    "price": 24715.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-10",
+    "type": "",
+    "name": "KRX:437370",
+    "code": "",
+    "quantity": 1.0,
+    "price": 11220.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-12",
+    "type": "",
+    "name": "KRX:0080G0",
+    "code": "",
+    "quantity": 1.0,
+    "price": 14510.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-12",
+    "type": "",
+    "name": "KRX:396500",
+    "code": "",
+    "quantity": 1.0,
+    "price": 32640.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-12",
+    "type": "",
+    "name": "KOSDAQ:046970",
+    "code": "",
+    "quantity": 3.0,
+    "price": 1490.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-12",
+    "type": "",
+    "name": "KRX:0080G0",
+    "code": "",
+    "quantity": 1.0,
+    "price": 14570.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-16",
+    "type": "",
+    "name": "KRX:0080G0",
+    "code": "",
+    "quantity": 1.0,
+    "price": 14440.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-16",
+    "type": "",
+    "name": "KRX:437370",
+    "code": "",
+    "quantity": 1.0,
+    "price": 11605.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-16",
+    "type": "",
+    "name": "KOSDAQ:046970",
+    "code": "",
+    "quantity": 6.0,
+    "price": 1500.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-17",
+    "type": "",
+    "name": "KRX:368590",
+    "code": "",
+    "quantity": 1.0,
+    "price": 27100.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-17",
+    "type": "",
+    "name": "KRX:437370",
+    "code": "",
+    "quantity": 1.0,
+    "price": 11525.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-18",
+    "type": "",
+    "name": "KOSDAQ:263750",
+    "code": "",
+    "quantity": 1.0,
+    "price": 61000.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-03-19",
+    "type": "",
+    "name": "KOSDAQ:263750",
+    "code": "",
+    "quantity": 1.0,
+    "price": 47000.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-06",
+    "type": "",
+    "name": "KRX:0080G0",
+    "code": "",
+    "quantity": 1.0,
+    "price": 14690.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-06",
+    "type": "",
+    "name": "KRX:368590",
+    "code": "",
+    "quantity": 1.0,
+    "price": 26730.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-08",
+    "type": "",
+    "name": "KRX:0080G0",
+    "code": "",
+    "quantity": 1.0,
+    "price": 14580.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-08",
+    "type": "",
+    "name": "KRX:329750",
+    "code": "",
+    "quantity": 1.0,
+    "price": 13800.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-08",
+    "type": "",
+    "name": "KRX:437370",
+    "code": "",
+    "quantity": 1.0,
+    "price": 11580.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-08",
+    "type": "",
+    "name": "KOSDAQ:046970",
+    "code": "",
+    "quantity": 1.0,
+    "price": 7050.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-10",
+    "type": "",
+    "name": "KRX:004380",
+    "code": "",
+    "quantity": 1.0,
+    "price": 11700.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-14",
+    "type": "",
+    "name": "KOSDAQ:056360",
+    "code": "",
+    "quantity": 1.0,
+    "price": 12280.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-14",
+    "type": "",
+    "name": "KRX:463300",
+    "code": "",
+    "quantity": 1.0,
+    "price": 13990.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-16",
+    "type": "",
+    "name": "KRX:437370",
+    "code": "",
+    "quantity": 1.0,
+    "price": 11380.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-17",
+    "type": "",
+    "name": "KRX:437370",
+    "code": "",
+    "quantity": 1.0,
+    "price": 11430.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-21",
+    "type": "",
+    "name": "KRX:0080G0",
+    "code": "",
+    "quantity": 1.0,
+    "price": 14890.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-21",
+    "type": "",
+    "name": "KRX:360750",
+    "code": "",
+    "quantity": 1.0,
+    "price": 26030.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-22",
+    "type": "",
+    "name": "KRX:469150",
+    "code": "",
+    "quantity": 1.0,
+    "price": 53800.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-23",
+    "type": "",
+    "name": "KRX:0080G0",
+    "code": "",
+    "quantity": 1.0,
+    "price": 15270.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-23",
+    "type": "",
+    "name": "KRX:360750",
+    "code": "",
+    "quantity": 1.0,
+    "price": 26140.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-04-23",
+    "type": "",
+    "name": "KRX:437370",
+    "code": "",
+    "quantity": 1.0,
+    "price": 11270.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-05-04",
+    "type": "",
+    "name": "KRX:360750",
+    "code": "",
+    "quantity": 1.0,
+    "price": 26400.0,
+    "exchangeRate": 1.0
+  },
+  {
+    "portfolio": "저축투자",
+    "date": "2026-05-05",
+    "type": "",
+    "name": "UPS",
+    "code": "",
+    "quantity": 1.0,
+    "price": 96.69,
+    "exchangeRate": 1415.35
+  },
+  {
+    "portfolio": "원천세투자(토스 모으기)",
+    "date": "2026-02-13",
+    "type": "",
+    "name": "SPYM",
+    "code": "",
+    "quantity": 1.0,
+    "price": 90.69,
+    "exchangeRate": 1415.35
   }
 ];
