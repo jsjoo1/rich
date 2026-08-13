@@ -25,7 +25,7 @@ function isTxOverseas(tx) {
     return false;
 }
 
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwegeQp_VpcwobpKzeg8cmQ9bpOI3sC3D6p0R95cmk-uNlmy5Rp-7xdbGMy6oSbQd6rOQ/exec"; 
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx9u7YR3LDC_8ELh3hBiKOu7Grq2vv4IB7tZU3MfMg-bXcoIxnQpAXcwdMJ_qVoxEPjHA/exec"; 
 
 function num(n) { 
     if(isNaN(n) || !isFinite(n)) return "0";
@@ -43,36 +43,50 @@ async function fetchHistoricalRate(dateStr) {
 }
 
 async function updatePricesInBackground() {
-    // 💡 1. 핵심 해결 로직: 현금, 달러, 코인, 분배금 등 주식이 아닌 데이터는 구글 API 요청에서 제외!
-    let uniqueTickers = [...new Set(transactions.map(t => {
-        let key = (t.code || t.name || '').trim();
+    let validTxs = transactions.filter(t => {
+        if (!t.type && !t.name) return false;
         let type = (t.type || '').toLowerCase();
-        if (key.includes('현금') || key.includes('달러') || key.toLowerCase().includes('krw') || 
-            type.includes('코인') || type.includes('손익') || type.includes('배당') || type.includes('분배')) {
-            return null;
-        }
-        return key;
-    }).filter(c => c))];
+        let name = (t.name || '').toLowerCase();
+        if (type.includes('코인') || name.includes('krw') || name.includes('현금') || name.includes('달러')) return false;
+        if (type.includes('손익') || type.includes('분배') || type.includes('배당')) return false;
+        return true;
+    });
+
+    let uniqueTickers = [...new Set(validTxs.map(t => (t.code || t.name).trim()).filter(c => c))];
     
     let ratePromise = fetch('https://api.frankfurter.app/latest?from=USD&to=KRW')
         .then(res => res.json())
         .then(data => { if (data && data.rates && data.rates.KRW) currentUsdKrw = data.rates.KRW; })
         .catch(e => console.log("환율 로드 실패"));
 
-    let pricePromise = Promise.resolve();
+    let pricePromises = [];
+    
     if (GAS_API_URL && GAS_API_URL.startsWith("http") && uniqueTickers.length > 0) {
-        // 💡 2. 쉼표 인코딩 없이 순수 문자열로 전송하여 구글 서버 파싱 에러 원천 차단
-        pricePromise = fetch(GAS_API_URL + "?tickers=" + uniqueTickers.join(','))
-            .then(res => res.json())
-            .then(data => { 
-                if (data && !data.error) {
-                    currentPrices = data.result || data.data || data; 
-                }
-            })
-            .catch(e => console.log("실시간 주가 로드 실패"));
+        // 💡 핵심: 15개 단위로 쪼개어 병렬로 요청 (타임아웃 방지)
+        const CHUNK_SIZE = 15;
+        for (let i = 0; i < uniqueTickers.length; i += CHUNK_SIZE) {
+            let chunk = uniqueTickers.slice(i, i + CHUNK_SIZE);
+            let tickersQuery = encodeURIComponent(chunk.join(','));
+            
+            let p = fetch(GAS_API_URL + "?tickers=" + tickersQuery)
+                .then(res => {
+                    if(!res.ok) throw new Error("Server HTTP Error: " + res.status);
+                    return res.json();
+                })
+                .then(data => { 
+                    if (data && !data.error) {
+                        let resultData = data.result || data.data || data;
+                        Object.assign(currentPrices, resultData); // 응답받은 데이터를 병합
+                    }
+                })
+                .catch(e => {
+                    console.error("실시간 주가 로드 실패:", e);
+                });
+            pricePromises.push(p);
+        }
     }
 
-    await Promise.all([ratePromise, pricePromise]);
+    await Promise.all([ratePromise, ...pricePromises]);
     render();
 }
 
@@ -83,12 +97,12 @@ async function initApp() {
     </div>`;
 
     let loaded = false;
-    let timeout = setTimeout(() => { if (!loaded) { loaded = true; render(); } }, 8000);
+    let timeout = setTimeout(() => { if (!loaded) { loaded = true; render(); } }, 10000);
     
     await updatePricesInBackground();
     
     if (!loaded) { loaded = true; clearTimeout(timeout); render(); }
-    setInterval(updatePricesInBackground, 60000);
+    setInterval(updatePricesInBackground, 5000);
 }
 
 function render() {
@@ -118,7 +132,6 @@ function render() {
         let tickerKey = (tx.code || tx.name).trim();
         let shortCode = tickerKey.replace('KRX:', '').replace('KOSDAQ:', '');
         
-        // 💡 3. 구글 응답값이 KRX:005930 이든 005930 이든 무조건 가격을 매칭하도록 안전망 적용
         let curPriceRaw = currentPrices[tickerKey] || currentPrices[shortCode] || currentPrices[tx.name.trim()] || tx.price;
         
         let curAmountKRW = isOverseas ? (tx.quantity * curPriceRaw * currentUsdKrw) : (tx.quantity * curPriceRaw);
@@ -206,7 +219,6 @@ function render() {
             let avgPriceOriginal = p.totalAmountOriginal / p.quantity;
             let displayAvgPrice = p.isOverseas ? usd(avgPriceOriginal) : num(avgPriceOriginal);
             
-            // 실시간 가격 적용
             let curPriceRaw = currentPrices[p.tickerKey] || currentPrices[p.tickerKey.replace('KRX:','').replace('KOSDAQ:','')] || avgPriceOriginal;
             let displayCurPrice = p.isOverseas ? usd(curPriceRaw) : num(curPriceRaw);
             
@@ -254,7 +266,6 @@ function render() {
         ? loans.map(l => `<option value="${l.id}">${l.name}</option>`).join('')
         : `<option value="" disabled selected>등록된 대출이 없습니다</option>`;
 
-    // 모달창 영역
     if (modal === 'data') {
         html += `
             <div class="overlay" id="ovData">
