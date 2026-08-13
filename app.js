@@ -60,25 +60,35 @@ async function updatePricesInBackground() {
         .catch(e => console.log("환율 로드 실패"));
 
     let pricePromise = Promise.resolve();
-    
+
     if (GAS_API_URL && GAS_API_URL.startsWith("http") && uniqueTickers.length > 0) {
-        // 💡 핵심: 쪼개지 않고 단 1번의 요청으로 모든 주가 데이터 일괄 조회 (가장 빠름)
-        let tickersQuery = encodeURIComponent(uniqueTickers.join(','));
-        
-        pricePromise = fetch(GAS_API_URL + "?tickers=" + tickersQuery)
-            .then(res => {
-                if(!res.ok) throw new Error("Server HTTP Error: " + res.status);
-                return res.json();
-            })
-            .then(data => { 
-                if (data && !data.error) {
-                    let resultData = data.result || data.data || data;
-                    Object.assign(currentPrices, resultData); // 응답받은 데이터를 병합
-                }
-            })
-            .catch(e => {
-                console.error("실시간 주가 로드 실패:", e);
-            });
+        // 💡 핵심: 티커가 많으면(60개 이상) GAS 실행 시간이 길어져 CORS 헤더 없는 오류(net::ERR_FAILED)가 발생함.
+        // 15개씩 나눠서 여러 요청을 동시에(병렬로) 보내면 각 요청이 짧게 끝나서 타임아웃을 피할 수 있음.
+        const BATCH_SIZE = 15;
+        let batches = [];
+        for (let i = 0; i < uniqueTickers.length; i += BATCH_SIZE) {
+            batches.push(uniqueTickers.slice(i, i + BATCH_SIZE));
+        }
+
+        let batchPromises = batches.map(batch => {
+            let tickersQuery = encodeURIComponent(batch.join(','));
+            return fetch(GAS_API_URL + "?tickers=" + tickersQuery)
+                .then(res => {
+                    if (!res.ok) throw new Error("Server HTTP Error: " + res.status);
+                    return res.json();
+                })
+                .then(data => {
+                    if (data && !data.error) {
+                        let resultData = data.result || data.data || data;
+                        Object.assign(currentPrices, resultData); // 배치별 결과를 순서 상관없이 병합
+                    }
+                })
+                .catch(e => {
+                    console.error("실시간 주가 배치 로드 실패:", batch, e);
+                });
+        });
+
+        pricePromise = Promise.all(batchPromises);
     }
 
     await Promise.all([ratePromise, pricePromise]);
