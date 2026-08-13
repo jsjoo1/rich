@@ -6,7 +6,7 @@ if (localStorage.getItem('mySavedTxs')) { transactions = [...savedTxs]; } else {
 let loans = JSON.parse(localStorage.getItem('myLoans') || '[]');
 loans = loans.map(l => {
     if(!l.id) l.id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
-    if(!l.records) { l.records = []; if(l.amount && Number(l.amount) > 0) { l.records.push({id: Date.now().toString(), date: l.startDate, amount: Number(l.amount)}); } }
+    if(!l.records) { l.records = []; if(l.amount && Number(l.amount) > 0) { l.records.push({id: Date.now().toString(), date: l.startDate || new Date().toISOString().split('T')[0], amount: Number(l.amount)}); } }
     return l;
 });
 localStorage.setItem('myLoans', JSON.stringify(loans));
@@ -67,32 +67,61 @@ function render() {
     document.querySelectorAll('input, select').forEach(el => { if(el.id && el.type !== 'file') tempInputs[el.id] = el.value; });
 
     let scrollY = window.scrollY;
-    let sheetScroll = document.getElementById('modalSheet') ? document.getElementById('modalSheet').scrollTop : 0;
+    let sheetScroll = document.getElementById('modalSheet') ? document.getElementById('modalSheet'].scrollTop : 0;
+    let loanListScroll = document.getElementById('loanListScroll') ? document.getElementById('loanListScroll'].scrollTop : 0;
 
     const app = document.getElementById('app'); const today = new Date();
     let totalInvested = 0; let accruedInterest = 0; let totalCurrentValue = 0; let portfolio = {};
     
-    loans.forEach(loan => { loan.records.forEach(rec => { let diffDays = Math.max(0, Math.ceil((today.getTime() - new Date(rec.date).getTime()) / 86400000)); accruedInterest += rec.amount * (loan.rate / 100) / 365 * diffDays; }); });
+    loans.forEach(loan => { 
+        loan.records.forEach(rec => { 
+            let diffDays = Math.max(0, Math.ceil((today.getTime() - new Date(rec.date).getTime()) / 86400000)); 
+            accruedInterest += rec.amount * (loan.rate / 100) / 365 * diffDays; 
+        }); 
+    });
+
     transactions.forEach(tx => {
         let isOverseas = isTxOverseas(tx);
         let amountKRW = isOverseas ? (tx.quantity * tx.price * tx.exchangeRate) : (tx.quantity * tx.price);
-        let curPrice = currentPrices[tx.code || tx.name] || tx.price;
-        let curAmountKRW = isOverseas ? (tx.quantity * curPrice * currentUsdKrw) : (tx.quantity * curPrice);
-        if(!portfolio[tx.name]) portfolio[tx.name] = { type: tx.type, tickerKey: tx.code || tx.name, code: tx.code, quantity: 0, totalAmountKRW: 0, totalAmountOriginal: 0, currentValueKRW: 0, isOverseas: isOverseas };
-        portfolio[tx.name].quantity += tx.quantity; portfolio[tx.name].totalAmountOriginal += (tx.quantity * tx.price); portfolio[tx.name].totalAmountKRW += amountKRW; portfolio[tx.name].currentValueKRW += curAmountKRW;
-        totalInvested += amountKRW; totalCurrentValue += curAmountKRW;
+        let tickerKey = tx.code || tx.name;
+        let curPriceRaw = currentPrices[tickerKey] || tx.price;
+        let curAmountKRW = isOverseas ? (tx.quantity * curPriceRaw * currentUsdKrw) : (tx.quantity * curPriceRaw);
+
+        if(!portfolio[tx.name]) {
+            portfolio[tx.name] = { 
+                type: tx.type, tickerKey: tickerKey, code: tx.code, 
+                quantity: 0, totalAmountKRW: 0, totalAmountOriginal: 0, 
+                currentValueKRW: 0, isOverseas: isOverseas 
+            };
+        }
+        portfolio[tx.name].quantity += tx.quantity; 
+        portfolio[tx.name].totalAmountOriginal += (tx.quantity * tx.price); 
+        portfolio[tx.name].totalAmountKRW += amountKRW; 
+        portfolio[tx.name].currentValueKRW += curAmountKRW;
+
+        totalInvested += amountKRW; 
+        totalCurrentValue += curAmountKRW;
     });
 
-    let marketProfit = totalCurrentValue - totalInvested; let netProfit = marketProfit - accruedInterest; let realReturnRate = totalInvested > 0 ? (netProfit / totalInvested) * 100 : 0;
-    let activeStocks = Object.keys(portfolio).filter(name => portfolio[name].quantity > 0.0001 && name.toLowerCase().includes(searchText.toLowerCase())).sort((a,b) => {
+    let marketProfit = totalCurrentValue - totalInvested; 
+    let netProfit = marketProfit - accruedInterest; 
+    let realReturnRate = totalInvested > 0 ? (netProfit / totalInvested) * 100 : 0;
+
+    let activeStocks = Object.keys(portfolio).filter(name => portfolio[name].quantity > 0.0001 && name.toLowerCase().includes(searchText.toLowerCase()));
+    activeStocks.sort((a,b) => {
+        let pA = portfolio[a]; let pB = portfolio[b];
         if (sortBy === 'name_asc') return a.localeCompare(b);
-        if (sortBy === 'invested_desc') return portfolio[b].totalAmountKRW - portfolio[a].totalAmountKRW;
-        return portfolio[b].currentValueKRW - portfolio[a].currentValueKRW;
+        if (sortBy === 'invested_desc') return pB.totalAmountKRW - pA.totalAmountKRW;
+        if (sortBy === 'value_desc') return pB.currentValueKRW - pA.currentValueKRW;
+        return 0;
     });
 
     let html = `
         <div class="kw-summary">
-            <div class="kw-summary-title">총 실질손익(원) <span style="font-size:11px; color:var(--text-soft); padding:2px 6px; background:var(--surface-sub); border-radius:4px;">*대출이자 차감</span></div>
+            <div class="kw-summary-title">
+                총 실질손익(원) 
+                <span style="font-size:11px; color:var(--text-soft); font-weight:400; margin-left:6px; background:var(--surface-sub); padding:2px 6px; border-radius:4px;">*대출이자 차감</span>
+            </div>
             <div class="kw-summary-main ${getColorClass(netProfit)}">
                 <div class="val">${getSign(netProfit)}${num(netProfit)}</div>
                 <div class="pct">${getSign(netProfit)}${realReturnRate.toFixed(2)}%</div>
@@ -100,29 +129,93 @@ function render() {
             <div class="kw-summary-grid">
                 <div class="kw-sg-item"><span class="lbl">매입금액</span><span class="val">${num(totalInvested)}</span></div>
                 <div class="kw-sg-item"><span class="lbl">평가금액</span><span class="val">${num(totalCurrentValue)}</span></div>
-                <div class="kw-sg-item" style="cursor:pointer;" onclick="openLoanModal()"><span class="lbl" style="color:var(--primary); font-weight:700;">이자관리 ⚙️</span><span class="val" style="color:var(--text-soft);">- ${num(accruedInterest)}</span></div>
-            </div>
-        </div>
-        <div class="page" style="padding:0;">
-            <div class="portfolio-tools">
-                <div class="view-toggles"><button class="${viewMode === 'list' ? 'active' : ''}" onclick="window.setViewMode('list')">일반 잔고</button><button class="${viewMode === 'chart' ? 'active' : ''}" onclick="window.setViewMode('chart')">파이 차트</button></div>
-                <div class="filter-sort-row" style="display:flex; gap:8px;">
-                    <button onclick="window.openDataModal()" style="background:var(--surface-sub); border:none; color:var(--text); padding:0 12px; border-radius:8px; font-size:12px; cursor:pointer;">💾 데이터 관리</button>
-                    <input type="text" id="searchInput" placeholder="검색..." value="${searchText}" oninput="window.setSearchText(this.value)" style="flex:1;">
-                    <select id="sortSelect" onchange="window.setSortBy(this.value)"><option value="invested_desc">매입금액순</option><option value="value_desc">평가금액순</option></select>
+                <div class="kw-sg-item"><span class="lbl">시세단순손익</span><span class="val ${getColorClass(marketProfit)}">${getSign(marketProfit)}${num(marketProfit)}</span></div>
+                <div class="kw-sg-item" style="cursor:pointer;" onclick="openLoanModal()">
+                    <span class="lbl" style="color:var(--primary); font-weight:700;">누적대출이자 ⚙️ 관리</span>
+                    <span class="val" style="color:var(--text-soft);">- ${num(accruedInterest)}</span>
                 </div>
             </div>
-            ${viewMode === 'list' ? '<div class="kw-table">' + activeStocks.map(name => `
-                <div class="kw-row" onclick="openStockDetail('${name}')">
-                    <div class="col-name">${name}<span class="ticker">${portfolio[name].quantity.toLocaleString()}주</span></div>
-                    <div class="col">${usd(currentPrices[portfolio[name].tickerKey] || portfolio[name].totalAmountOriginal/portfolio[name].quantity)}</div>
-                    <div class="col ${getColorClass(portfolio[name].currentValueKRW - portfolio[name].totalAmountKRW)}">${getSign(portfolio[name].currentValueKRW - portfolio[name].totalAmountKRW)}${num(portfolio[name].currentValueKRW - portfolio[name].totalAmountKRW)}</div>
-                    <div class="col col-amt">${num(portfolio[name].currentValueKRW)}</div>
-                </div>`).join('') + '</div>' : '<div class="chart-container"><canvas id="portfolioChart"></canvas></div>'}
         </div>
-        <button class="fab" id="fabAdd">+</button>
+        
+        <div class="page" style="padding:0;">
+            <div class="portfolio-tools">
+                <div class="view-toggles">
+                    <button class="${viewMode === 'list' ? 'active' : ''}" onclick="window.setViewMode('list')">일반 잔고</button>
+                    <button class="${viewMode === 'chart' ? 'active' : ''}" onclick="window.setViewMode('chart')">파이 차트</button>
+                </div>
+                <div class="filter-sort-row" style="display:flex; gap:8px;">
+                    <button onclick="window.openDataModal()" style="background:var(--surface-sub); border:none; color:var(--text); padding:0 12px; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer;">💾 데이터 관리</button>
+                    <input type="text" id="searchInput" placeholder="종목명 검색..." value="${searchText}" oninput="window.setSearchText(this.value)" style="flex:1;">
+                    <select id="sortSelect" onchange="window.setSortBy(this.value)">
+                        <option value="invested_desc" ${sortBy === 'invested_desc' ? 'selected' : ''}>매입금액순</option>
+                        <option value="value_desc" ${sortBy === 'value_desc' ? 'selected' : ''}>평가금액순</option>
+                        <option value="name_asc" ${sortBy === 'name_asc' ? 'selected' : ''}>종목명순</option>
+                    </select>
+                </div>
+            </div>
     `;
 
+    if (viewMode === 'list') {
+        html += `
+            <div class="kw-table">
+                <div class="kw-header">
+                    <div class="col-name">종목명(보유수량)</div>
+                    <div class="col-price">현재가<br>평균단가</div>
+                    <div class="col-pnl">평가손익<br>수익률</div>
+                    <div class="col-amt">평가금액<br>매입금액</div>
+                </div>
+        `;
+        activeStocks.forEach(name => {
+            let p = portfolio[name];
+            let avgPriceOriginal = p.totalAmountOriginal / p.quantity;
+            let displayAvgPrice = p.isOverseas ? usd(avgPriceOriginal) : num(avgPriceOriginal);
+            let curPriceRaw = currentPrices[p.tickerKey] || avgPriceOriginal;
+            let displayCurPrice = p.isOverseas ? usd(curPriceRaw) : num(curPriceRaw);
+            let stockProfitKRW = p.currentValueKRW - p.totalAmountKRW;
+            let stockReturnRate = p.totalAmountKRW > 0 ? (stockProfitKRW / p.totalAmountKRW) * 100 : 0;
+            let pColor = getColorClass(stockProfitKRW);
+            let pSign = getSign(stockProfitKRW);
+
+            html += `
+                <div class="kw-row" onclick="openStockDetail('${name}')">
+                    <div class="col-name">
+                        <span style="font-size:14px;">${name}</span>
+                        <span class="ticker">${p.quantity.toLocaleString('en-US', {maximumFractionDigits:4})}주</span>
+                    </div>
+                    <div class="col col-price">
+                        <span class="${pColor}">${displayCurPrice}</span>
+                        <span style="color:var(--text-soft); font-size:12px;">${displayAvgPrice}</span>
+                    </div>
+                    <div class="col ${pColor}">
+                        <span>${pSign}${num(stockProfitKRW)}</span>
+                        <span>${pSign}${stockReturnRate.toFixed(2)}%</span>
+                    </div>
+                    <div class="col col-amt">
+                        <span class="${pColor}">${num(p.currentValueKRW)}</span>
+                        <span style="color:var(--text-soft); font-size:12px;">${num(p.totalAmountKRW)}</span>
+                    </div>
+                </div>
+            `;
+        });
+        if(activeStocks.length === 0) {
+            html += `<div style="text-align:center; padding: 40px 0; color: var(--text-soft); font-size:14px;">조건에 맞는 종목이 없습니다.</div>`;
+        }
+        html += `</div>`;
+    } else if (viewMode === 'chart') {
+        html += `
+            <div class="chart-container">
+                ${activeStocks.length > 0 ? '<canvas id="portfolioChart"></canvas>' : '<div style="color:var(--text-soft); font-size:14px;">표시할 데이터가 없습니다.</div>'}
+            </div>
+        `;
+    }
+    html += `</div>`;
+    html += `<button class="fab" id="fabAdd">+</button>`;
+
+    let loanOptions = loans.length > 0 
+        ? loans.map(l => `<option value="${l.id}">${l.name}</option>`).join('')
+        : `<option value="" disabled selected>등록된 대출이 없습니다</option>`;
+
+    // 모달창 영역
     if (modal === 'data') {
         html += `
             <div class="overlay" id="ovData">
@@ -156,20 +249,73 @@ function render() {
             <div class="overlay" id="ovLoan">
                 <div class="sheet" id="modalSheet">
                     <div class="sheet-title">🏦 대출 관리<button class="close" onclick="window.closeModal()">✕</button></div>
-                    <div style="max-height:300px; overflow-y:auto;">${loanListHtml || '등록된 대출 없음'}</div>
+                    <div style="max-height:300px; overflow-y:auto;" id="loanListScroll">${loanListHtml || '등록된 대출 없음'}</div>
                     <div class="field" style="margin-top:12px;"><label>대출명</label><input type="text" id="loanName"></div>
                     <div class="field"><label>연 이자율 (%)</label><input type="number" step="0.01" id="loanRate"></div>
                     <button class="primary-btn" onclick="window.submitLoanAdd()">대출 등록</button>
                 </div>
             </div>
         `;
+    } else if (modal === 'add') {
+        html += `
+            <div class="overlay" id="ovAdd">
+                <div class="sheet" id="modalSheet">
+                    <div class="sheet-title">새 종목 추가<button class="close" onclick="window.closeModal()">✕</button></div>
+                    <div class="field"><label>자금 출처</label>
+                        <select id="addFundSource" onchange="window.toggleFundLoan(this.value, 'addFundLoanWrap')">
+                            <option value="현금">현금</option>
+                            <option value="대출">대출 연동</option>
+                        </select>
+                    </div>
+                    <div class="field" id="addFundLoanWrap" style="display:none;"><label>대출 선택</label><select id="addFundLoanId">${loanOptions}</select></div>
+                    <div class="field"><label>날짜</label><input type="date" id="addDate" value="${new Date().toISOString().split('T')[0]}"></div>
+                    <div class="field"><label>구분</label><select id="addType"><option value="국내주식">국내주식</option><option value="주식(해외)">주식(해외)</option></select></div>
+                    <div class="field"><label>종목명</label><input type="text" id="addName" placeholder="예: 삼성전자"></div>
+                    <div class="field"><label>종목코드</label><input type="text" id="addCode" placeholder="예: KRX:005930"></div>
+                    <div class="field"><label>수량</label><input type="number" step="0.0001" id="addQty" placeholder="수량"></div>
+                    <div class="field"><label>단가</label><input type="number" step="0.01" id="addPrice" placeholder="단가"></div>
+                    <button class="primary-btn" onclick="window.submitAdd()">기록 추가</button>
+                </div>
+            </div>
+        `;
+    } else if (modal === 'detail' && selectedStock) {
+        let stockTxs = transactions.filter(tx => tx.name === selectedStock);
+        let listHtml = stockTxs.map(tx => `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line);"><span>${tx.date}</span><span>${tx.quantity}주 / ${num(tx.price)}원</span></div>`).join('');
+        html += `
+            <div class="overlay" id="ovDetail">
+                <div class="sheet" id="modalSheet">
+                    <div class="sheet-title">${selectedStock}<button class="close" onclick="window.closeModal()">✕</button></div>
+                    <div style="max-height:250px; overflow-y:auto;">${listHtml}</div>
+                </div>
+            </div>
+        `;
     }
 
     app.innerHTML = html;
-    Object.keys(tempInputs).forEach(id => { let el = document.getElementById(id); if(el) el.value = tempInputs[id]; });
-    if (focusedElementId) { let el = document.getElementById(focusedElementId); if (el) { el.focus(); try { el.setSelectionRange(cursorPosition, cursorPosition); } catch(e){} } }
+
+    Object.keys(tempInputs).forEach(id => { 
+        let el = document.getElementById(id); 
+        if(el) {
+            el.value = tempInputs[id];
+            if (id === 'addFundSource') window.toggleFundLoan(el.value, 'addFundLoanWrap');
+        }
+    });
+
+    if (focusedElementId) { 
+        let el = document.getElementById(focusedElementId); 
+        if (el) { el.focus(); try { el.setSelectionRange(cursorPosition, cursorPosition); } catch(e){} } 
+    }
+
     window.scrollTo(0, scrollY);
-    if (document.getElementById('modalSheet')) document.getElementById('modalSheet').scrollTop = sheetScroll;
+    if (document.getElementById('modalSheet')) document.getElementById('modalSheet'].scrollTop = sheetScroll;
+    if (document.getElementById('loanListScroll')) document.getElementById('loanListScroll'].scrollTop = loanListScroll;
+
+    if (viewMode === 'chart' && activeStocks.length > 0) {
+        renderChart(activeStocks, portfolio);
+    }
+
+    let fab = document.getElementById('fabAdd');
+    if(fab) fab.onclick = () => { selectedStock = null; modal = 'add'; render(); };
 }
 
 window.setViewMode = function(mode) { viewMode = mode; render(); }
@@ -178,6 +324,11 @@ window.setSortBy = function(sort) { sortBy = sort; render(); }
 window.openLoanModal = function() { modal = 'loan'; render(); }
 window.openDataModal = function() { modal = 'data'; render(); }
 window.closeModal = function() { modal = null; render(); }
+window.openStockDetail = function(name) { selectedStock = name; modal = 'detail'; render(); }
+window.toggleFundLoan = function(val, wrapId) {
+    let wrap = document.getElementById(wrapId);
+    if(wrap) wrap.style.display = (val === '대출') ? 'block' : 'none';
+}
 
 window.downloadTemplate = function() {
     let headers = ["날짜", "구분", "종목명", "코드", "수량", "단가", "환율"];
@@ -232,6 +383,42 @@ window.submitLoanAdd = function() {
         localStorage.setItem('myLoans', JSON.stringify(loans));
         window.closeModal();
     }
+}
+
+window.submitAdd = function() {
+    let name = document.getElementById('addName').value.trim();
+    let qty = Number(document.getElementById('addQty').value);
+    let price = Number(document.getElementById('addPrice').value);
+    if(!name || !qty || !price) { alert('필수 정보를 입력하세요.'); return; }
+    
+    let newTx = {
+        portfolio: "수동입력",
+        date: document.getElementById('addDate').value,
+        type: document.getElementById('addType').value,
+        name: name,
+        code: document.getElementById('addCode').value.trim(),
+        quantity: qty,
+        price: price,
+        exchangeRate: 1.0
+    };
+    transactions.unshift(newTx);
+    savedTxs.unshift(newTx);
+    localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
+    window.closeModal();
+}
+
+function renderChart(stocks, portfolioData) {
+    let ctx = document.getElementById('portfolioChart').getContext('2d');
+    if (chartInstance) chartInstance.destroy(); 
+    let labels = stocks;
+    let data = stocks.map(name => portfolioData[name].currentValueKRW);
+    let bgColors = stocks.map((_, i) => `hsl(${(i * 360 / stocks.length) % 360}, 70%, 60%)`);
+
+    chartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderWidth: 0 }] },
+        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, color: '#8f95b2' } } } }
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => initApp());
