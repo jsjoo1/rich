@@ -1,10 +1,16 @@
+// 초기 데이터 처리 (기본 initial_data가 있어도 덮어쓰기 가능하도록 셋팅)
 let transactions = [];
 if (typeof initialTransactions !== 'undefined') {
   transactions = [...initialTransactions];
 }
 
 let savedTxs = JSON.parse(localStorage.getItem('mySavedTxs') || '[]');
-transactions = [...savedTxs, ...transactions];
+// 만약 로컬스토리지에 저장된 데이터가 있다면 초기 데이터를 무시하고 로컬 데이터 우선 적용
+if (localStorage.getItem('mySavedTxs')) {
+    transactions = [...savedTxs];
+} else {
+    transactions = [...savedTxs, ...transactions];
+}
 
 let loans = JSON.parse(localStorage.getItem('myLoans') || '[]');
 loans = loans.map(l => {
@@ -123,7 +129,7 @@ function render() {
 
     let tempInputs = {};
     document.querySelectorAll('input, select').forEach(el => {
-        if(el.id) tempInputs[el.id] = el.value;
+        if(el.id && el.type !== 'file') tempInputs[el.id] = el.value;
     });
 
     let currentWindowScrollY = window.scrollY;
@@ -237,9 +243,11 @@ function render() {
         
         <div class="page" style="padding:0;">
             <div class="portfolio-tools">
-                <div class="view-toggles">
+                <div class="view-toggles" style="display:flex; align-items:center; gap:8px;">
                     <button class="${viewMode === 'list' ? 'active' : ''}" onclick="window.setViewMode('list')">일반 잔고</button>
                     <button class="${viewMode === 'chart' ? 'active' : ''}" onclick="window.setViewMode('chart')">파이 차트</button>
+                    <!-- 💡 데이터 초기화/업로드 메뉴 버튼 -->
+                    <button onclick="window.openDataModal()" style="margin-left:auto; background:rgba(255,255,255,0.1); border:none; color:var(--text); padding:6px 12px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">💾 데이터 관리</button>
                 </div>
                 <div class="filter-sort-row">
                     <input type="text" id="searchInput" placeholder="종목명 검색..." value="${searchText}" oninput="window.setSearchText(this.value)">
@@ -314,12 +322,36 @@ function render() {
     html += `</div>`;
     html += `<button class="fab" id="fabAdd">+</button>`;
 
-    // 대출 목록 옵션 HTML 생성
     let loanOptions = loans.length > 0 
         ? loans.map(l => `<option value="${l.id}">${l.name}</option>`).join('')
         : `<option value="" disabled selected>등록된 대출이 없습니다</option>`;
 
-    if(modal === 'add') {
+    // 💡 1. 엑셀/CSV 업로드 및 데이터 초기화 모달
+    if (modal === 'data') {
+        html += `
+            <div class="overlay" id="ovData">
+                <div class="sheet" id="modalSheet">
+                    <div class="sheet-title">💾 데이터 관리<button class="close" onclick="closeModal()">✕</button></div>
+                    
+                    <div style="background:var(--surface-sub); padding:16px; border-radius:12px; margin-bottom:20px; font-size:13px; color:var(--text-soft); line-height:1.6;">
+                        <span style="color:var(--primary); font-weight:800; font-size:14px;">📊 엑셀/CSV 업로드 안내</span><br><br>
+                        PC나 모바일에 저장된 엑셀(.xlsx) 또는 CSV 파일을 선택하면 기존의 모든 주식 매매 기록이 지워지고 <b>새 파일의 데이터로 덮어씌워집니다.</b> (대출 기록은 유지됨)<br><br>
+                        <b>[필수 헤더 양식]</b> 1행에 아래의 이름이 포함되어야 합니다.<br>
+                        👉 <span style="color:var(--text);">날짜, 구분, 종목명, 코드, 수량, 단가, 환율</span><br>
+                        (※ '구분'은 "국내주식" 또는 "주식(해외)"로 입력해주세요)
+                    </div>
+                    
+                    <input type="file" id="fileUpload" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style="display:none;" onchange="handleFileUpload(event)">
+                    
+                    <div style="display:flex; flex-direction:column; gap:12px;">
+                        <button class="primary-btn" onclick="document.getElementById('fileUpload').click()" style="margin:0; background:var(--primary); color:#fff; font-weight:800;">엑셀 / CSV 파일 업로드</button>
+                        <button class="primary-btn" onclick="resetPortfolio()" style="margin:0; background:transparent; border:1px solid var(--danger); color:var(--danger); font-weight:800;">🚨 포트폴리오 완전 초기화</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    else if(modal === 'add') {
         let pName = selectedStock || '';
         let pType = '국내주식';
         let pCode = '';
@@ -333,7 +365,6 @@ function render() {
                 <div class="sheet" id="modalSheet">
                     <div class="sheet-title">새 종목 추가<button class="close" onclick="closeModal()">✕</button></div>
                     
-                    <!-- 💡 자금 출처 메뉴 UI 개선 -->
                     <div style="background:var(--surface-sub); padding:16px; border-radius:12px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.05);">
                         <div class="field" style="margin-bottom:8px;"><label>💰 자금 출처 선택</label>
                             <select id="addFundSource" onchange="window.toggleFundLoan(this.value, 'addFundLoanWrap')" style="background:var(--surface); border:1px solid var(--primary); font-weight:600;">
@@ -408,7 +439,6 @@ function render() {
                             <span style="font-size: 13px; font-weight: 800; color: var(--text);">📝 이 종목 신규 기록 추가</span>
                         </div>
 
-                        <!-- 💡 자금 출처 메뉴 UI 개선 -->
                         <div class="filter-sort-row" style="margin-bottom:12px;">
                             <select id="detailFundSource" onchange="window.toggleFundLoan(this.value, 'detailFundLoanWrap')" style="flex:1; border:1px solid var(--primary); background:var(--surface); color:var(--text); font-weight:600; padding:10px 12px; border-radius:10px; outline:none;">
                                 <option value="현금">💰 자금출처: 현금</option>
@@ -533,7 +563,6 @@ function render() {
         let el = document.getElementById(id);
         if(el && tempInputs[id] !== undefined) {
             el.value = tempInputs[id];
-            // 💡 저장된 값에 따라 화면 동적 UI 처리
             if (id === 'addFundSource') window.toggleFundLoan(el.value, 'addFundLoanWrap');
             if (id === 'detailFundSource') window.toggleFundLoan(el.value, 'detailFundLoanWrap');
         }
@@ -572,6 +601,8 @@ function render() {
     if(ovDetail) ovDetail.onclick = (e) => { if(e.target === ovDetail) closeModal(); };
     let ovLoan = document.getElementById('ovLoan');
     if(ovLoan) ovLoan.onclick = (e) => { if(e.target === ovLoan) closeModal(); };
+    let ovData = document.getElementById('ovData');
+    if(ovData) ovData.onclick = (e) => { if(e.target === ovData) closeModal(); };
 
     if (modal === 'add') {
         bindModalEvents();
@@ -595,12 +626,96 @@ window.openLoanModal = function() {
     render();
 }
 
+// 💡 데이터 관리 모달 열기
+window.openDataModal = function() {
+    modal = 'data';
+    render();
+}
+
 window.toggleFundLoan = function(val, wrapId) {
     let wrap = document.getElementById(wrapId);
     if(wrap) {
         if (val === '대출') wrap.style.display = 'block';
         else wrap.style.display = 'none';
     }
+}
+
+// 💡 포트폴리오 완전 초기화 로직
+window.resetPortfolio = function() {
+    if (confirm('정말 보유 중인 모든 매매 기록을 삭제하시겠습니까?\n(대출 정보 및 대출 실행 내역은 삭제되지 않습니다.)')) {
+        savedTxs = [];
+        transactions = [];
+        localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
+        closeModal();
+        showToast('포트폴리오가 완전히 초기화되었습니다.');
+    }
+}
+
+// 💡 엑셀 / CSV 파일 업로드 파싱 로직
+window.handleFileUpload = function(e) {
+    let file = e.target.files[0];
+    if(!file) return;
+
+    let reader = new FileReader();
+    reader.onload = function(evt) {
+        try {
+            let data = new Uint8Array(evt.target.result);
+            let workbook = XLSX.read(data, {type: 'array'});
+            let firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            let rows = XLSX.utils.sheet_to_json(firstSheet);
+
+            if(rows.length === 0) {
+                showToast('파일에 데이터가 없습니다.');
+                return;
+            }
+
+            if(confirm('기존 데이터를 모두 지우고 이 파일의 데이터로 덮어쓰시겠습니까?')) {
+                let newTxs = rows.map(row => {
+                    // 엑셀 날짜 형식(숫자) 방어 코드
+                    let d = row['날짜'] || row['date'] || new Date().toISOString().split('T')[0];
+                    if (typeof d === 'number') {
+                        let dateObj = new Date(Math.round((d - 25569) * 86400 * 1000));
+                        d = dateObj.toISOString().split('T')[0];
+                    }
+
+                    let qty = Number(row['수량'] || row['quantity'] || 0);
+                    let price = Number(row['단가'] || row['price'] || 0);
+                    let rate = Number(row['환율'] || row['exchangeRate'] || 1.0);
+                    let type = row['구분'] || row['type'] || '국내주식';
+
+                    return {
+                        portfolio: "업로드",
+                        date: d,
+                        type: type,
+                        name: row['종목명'] || row['name'] || '이름없음',
+                        code: row['코드'] || row['종목코드'] || row['code'] || '',
+                        quantity: qty,
+                        price: price,
+                        exchangeRate: rate
+                    };
+                });
+
+                savedTxs = newTxs;
+                transactions = [...savedTxs];
+                localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
+
+                // 종목명 메모리(티커맵) 업데이트
+                tickerMap = {};
+                transactions.forEach(tx => {
+                    if (tx.name && tx.code) tickerMap[tx.name] = tx.code;
+                });
+
+                closeModal();
+                showToast('포트폴리오 데이터가 성공적으로 적용되었습니다.');
+            }
+        } catch (err) {
+            alert('파일을 읽는 중 오류가 발생했습니다. 양식을 확인해주세요.');
+            console.error(err);
+        }
+        // 업로드 후 input 초기화 (동일 파일 재선택 방지)
+        document.getElementById('fileUpload').value = '';
+    };
+    reader.readAsArrayBuffer(file);
 }
 
 window.submitLoanAdd = function() {
