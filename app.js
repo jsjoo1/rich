@@ -52,7 +52,7 @@ async function initApp() {
     render(); 
     
     // ▼▼▼ 여기에 1단계에서 발급받은 새로운 웹 앱 URL을 붙여넣으세요 ▼▼▼
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyz1AdMif53X1CWtQMnkNuU52wCupKGRL3qBo54Pn6eZvZaw4EKqAqSG3_3U0jeZc_7kw/exec"; 
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbybtTcU_U83nQwiSjOriBk02wJcBdJ98Pmb-rfOQ1rsW4MvGR_BwwDnxBhKjBshr3kzRA/exec"; 
     
     // 2. 백그라운드에서 실시간 데이터 호출
     let ratePromise = fetch('https://api.frankfurter.app/latest?from=USD&to=KRW')
