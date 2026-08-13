@@ -1,6 +1,3 @@
-// ▼▼▼ 여기에 1단계에서 복사한 구글 웹 앱 URL을 붙여넣으세요 ▼▼▼
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwz7aR6XS_msI72hljtj65TVenN7F0vRXsl2MmGA1wcriu5pYype5l0-KBKpNOpZtr59g/exec";
-
 // 초기 데이터 로드 (initial_data.js 연동)
 let transactions = [];
 if (typeof initialTransactions !== 'undefined') {
@@ -21,6 +18,14 @@ let chartInstance = null;
 let currentPrices = {}; 
 let currentUsdKrw = 1300.0; // 기본 환율
 
+// 종목명 -> 티커(코드) 자동 매칭을 위한 딕셔너리 구축
+let tickerMap = {};
+transactions.forEach(tx => {
+    if (tx.name && tx.code) {
+        tickerMap[tx.name] = tx.code;
+    }
+});
+
 function num(n) { return Math.round(n).toLocaleString('ko-KR'); }
 function usd(n) { return '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 
@@ -33,10 +38,10 @@ function getSign(val) {
     return val > 0 ? '+' : '';
 }
 
-// 과거 환율 API (수동 입력 폼용)
+// 과거 환율 API
 async function fetchHistoricalRate(dateStr) {
     try {
-        const res = await fetch(`https://api.frankfurter.app/${dateStr}?from=USD&to=KRW`);
+        const res = await fetch(`[https://api.frankfurter.app/$](https://api.frankfurter.app/$){dateStr}?from=USD&to=KRW`);
         if (!res.ok) throw new Error('Network response was not ok');
         const data = await res.json();
         return data.rates.KRW;
@@ -47,26 +52,24 @@ async function fetchHistoricalRate(dateStr) {
 
 if (typeof Chart !== 'undefined') { Chart.defaults.color = '#8f95b2'; }
 
-// 앱 초기화 및 실시간 데이터 로드
 async function initApp() {
     const loadingEl = document.getElementById('loading');
     if (loadingEl) loadingEl.innerText = "실시간 현재가 및 환율 동기화 중...";
 
-    // 1. 현재 실시간 원달러 환율 불러오기
     try {
-        const res = await fetch('https://api.frankfurter.app/latest?from=USD&to=KRW');
+        const res = await fetch('[https://api.frankfurter.app/latest?from=USD&to=KRW](https://api.frankfurter.app/latest?from=USD&to=KRW)');
         const data = await res.json();
         if (data && data.rates && data.rates.KRW) {
             currentUsdKrw = data.rates.KRW;
         }
-    } catch(e) { console.log("실시간 환율 로드 실패"); }
+    } catch(e) { console.log("환율 로드 실패"); }
 
-    // 2. 보유 종목 고유 티커 추출
-    // 코드가 없으면 종목명 자체를 티커로 시도 (예: AAPL, TSLA 등)
     let uniqueTickers = [...new Set(transactions.map(t => t.code || t.name).filter(c => c))];
 
-    // 3. 구글 Apps Script 연동을 통한 실시간 주가 불러오기
-    if (GAS_API_URL && !GAS_API_URL.includes("여기에_복사한")) {
+    // ▼▼▼ 여기에 구글 웹 앱 URL을 붙여넣으세요 ▼▼▼
+    const GAS_API_URL = ""; 
+    
+    if (GAS_API_URL && GAS_API_URL.startsWith("http")) {
         try {
             const res = await fetch(GAS_API_URL + "?tickers=" + uniqueTickers.join(','));
             const data = await res.json();
@@ -97,7 +100,6 @@ function render() {
     let portfolio = {};
     const today = new Date();
     
-    // 거래 내역 집계
     transactions.forEach(tx => {
         let isOverseas = tx.type === '주식' || tx.type.includes('해외') || tx.exchangeRate > 100 || tx.name.includes('달러');
         let amountKRW = isOverseas ? (tx.quantity * tx.price * tx.exchangeRate) : (tx.quantity * tx.price);
@@ -106,16 +108,15 @@ function render() {
         let diffDays = Math.max(0, Math.ceil((today.getTime() - txDate.getTime()) / (1000 * 60 * 60 * 24)));
         accruedInterest += amountKRW * (loanSettings.rate / 100) / 365 * diffDays;
         
-        // 현재가 적용 (API 데이터 없으면 구매단가 적용)
         let tickerKey = tx.code || tx.name;
         let curPrice = currentPrices[tickerKey] || tx.price;
-        // 해외 주식은 현재 달러가 * 실시간 현재 환율 적용
         let curAmountKRW = isOverseas ? (tx.quantity * curPrice * currentUsdKrw) : (tx.quantity * curPrice);
 
         if(!portfolio[tx.name]) {
             portfolio[tx.name] = { 
                 type: tx.type, 
                 tickerKey: tickerKey,
+                code: tx.code,
                 quantity: 0, 
                 totalAmountKRW: 0, 
                 totalAmountOriginal: 0, 
@@ -215,7 +216,7 @@ function render() {
         activeStocks.forEach(name => {
             let p = portfolio[name];
             let avgPriceOriginal = p.totalAmountOriginal / p.quantity;
-            let displayPrice = p.isOverseas ? usd(avgPriceOriginal) : num(avgPriceOriginal);
+            let displayAvgPrice = p.isOverseas ? usd(avgPriceOriginal) : num(avgPriceOriginal);
             
             let stockProfitKRW = p.currentValueKRW - p.totalAmountKRW;
             let stockReturnRate = p.totalAmountKRW > 0 ? (stockProfitKRW / p.totalAmountKRW) * 100 : 0;
@@ -234,7 +235,7 @@ function render() {
                     </div>
                     <div class="col col-qty">
                         <span>${p.quantity.toLocaleString('en-US', {maximumFractionDigits:4})}</span>
-                        <span style="color:var(--text-soft); font-size:12px;">${displayPrice}</span>
+                        <span style="color:var(--text-soft); font-size:12px;">${displayAvgPrice}</span>
                     </div>
                     <div class="col col-amt">
                         <span style="color:var(--text-soft);">${num(p.totalAmountKRW)}</span>
@@ -263,14 +264,16 @@ function render() {
     if(modal === 'add') {
         let pName = selectedStock || '';
         let pType = '국내주식';
+        let pCode = '';
         if (selectedStock && portfolio[selectedStock]) {
             pType = portfolio[selectedStock].isOverseas ? '주식(해외)' : '국내주식';
+            pCode = portfolio[selectedStock].code || '';
         }
 
         html += `
             <div class="overlay" id="ovAdd">
                 <div class="sheet">
-                    <div class="sheet-title">새 종목 기록<button class="close" onclick="closeModal()">✕</button></div>
+                    <div class="sheet-title">새 종목 추가<button class="close" onclick="closeModal()">✕</button></div>
                     <div class="field"><label>날짜</label><input type="date" id="addDate" value="${new Date().toISOString().split('T')[0]}"></div>
                     <div class="field"><label>구분</label>
                         <select id="addType">
@@ -278,13 +281,14 @@ function render() {
                             <option value="주식(해외)" ${pType === '주식(해외)' ? 'selected' : ''}>주식(해외)</option>
                         </select>
                     </div>
-                    <div class="field"><label>종목명</label><input type="text" id="addName" placeholder="예: 삼성전자" value="${pName}"></div>
-                    <div class="field"><label>수량 (매도 시 음수 입력)</label><input type="number" step="0.0001" id="addQty" placeholder="예: 매수 10 / 매도 -5"></div>
+                    <div class="field"><label>종목명 (입력 시 티커 자동완성)</label><input type="text" id="addName" placeholder="예: 삼성전자" value="${pName}"></div>
+                    <div class="field"><label>종목코드 / 티커 (API 연동용)</label><input type="text" id="addCode" placeholder="예: KRX:005930 또는 AAPL" value="${pCode}"></div>
+                    <div class="field"><label>수량 (매도 시 -음수 입력)</label><input type="number" step="0.0001" id="addQty" placeholder="예: 매수 10 / 매도 -5"></div>
                     <div class="field"><label>거래 단가</label><input type="number" step="0.01" id="addPrice" placeholder="0"></div>
                     
                     <div class="field" id="rateFieldWrap" style="${pType === '주식(해외)' ? 'display:block;' : 'display:none;'}">
                         <label>환율 (선택일 자동조회)</label>
-                        <input type="number" step="0.1" id="addRate" value="1300.0">
+                        <input type="number" step="0.1" id="addRate" value="${currentUsdKrw.toFixed(1)}">
                         <div style="font-size:11px; color:var(--text-soft); margin-top:4px;" id="rateMsg">환율 정보 조회 중...</div>
                     </div>
                     <button class="primary-btn" onclick="submitAdd()">기록 추가</button>
@@ -293,7 +297,7 @@ function render() {
         `;
     } 
     else if (modal === 'detail' && selectedStock) {
-        let pInfo = portfolio[selectedStock] || { isOverseas: false, currentValueKRW: 0, tickerKey: '' };
+        let pInfo = portfolio[selectedStock] || { isOverseas: false, currentValueKRW: 0, tickerKey: '', code: '' };
         let curP = currentPrices[pInfo.tickerKey] ? currentPrices[pInfo.tickerKey] : null;
         
         let stockTxs = transactions.filter(tx => tx.name === selectedStock).sort((a,b) => new Date(b.date) - new Date(a.date));
@@ -338,7 +342,7 @@ function render() {
                         </div>
                         ${pInfo.isOverseas ? `<div style="font-size:11px; color:var(--text-soft); text-align:right; margin-bottom:12px;" id="detailRateMsg">오늘 기준 환율이 입력되었습니다.</div>` : ''}
                         
-                        <button class="primary-btn" onclick="submitDetailAdd()" style="margin-top: 0; margin-bottom: 12px;">기록 추가하기</button>
+                        <button class="primary-btn" onclick="submitDetailAdd('${pInfo.code}')" style="margin-top: 0; margin-bottom: 12px;">기록 추가하기</button>
                     </div>
 
                     <div style="font-size: 14px; font-weight: 800; margin-bottom: 8px;">최근 체결 내역</div>
@@ -385,7 +389,7 @@ window.openStockDetail = function(name) {
     setTimeout(bindDetailRateEvent, 50);
 }
 
-window.submitDetailAdd = function() {
+window.submitDetailAdd = function(code) {
     let date = document.getElementById('detailAddDate').value;
     let qty = Number(document.getElementById('detailAddQty').value);
     let price = Number(document.getElementById('detailAddPrice').value);
@@ -404,13 +408,12 @@ window.submitDetailAdd = function() {
         date: date,
         type: type,
         name: selectedStock,
-        code: pObj ? pObj.code : '',
+        code: code || '',
         quantity: qty,
         price: price,
         exchangeRate: type.includes('해외') || type === '주식' ? rate : 1.0
     });
 
-    // 새로 입력된 데이터로 실시간 자산 재계산
     render(); 
     showToast('매매 기록이 추가되었습니다.');
     setTimeout(bindDetailRateEvent, 50);
@@ -483,6 +486,16 @@ function bindModalEvents() {
     const rateFieldWrap = document.getElementById('rateFieldWrap');
     const addRate = document.getElementById('addRate');
     const rateMsg = document.getElementById('rateMsg');
+    const addName = document.getElementById('addName');
+    const addCode = document.getElementById('addCode');
+
+    // 종목명 입력 시 티커 자동 매칭 이벤트
+    addName.addEventListener('input', function() {
+        let n = this.value.trim();
+        if (tickerMap[n]) {
+            addCode.value = tickerMap[n];
+        }
+    });
 
     async function checkRate() {
         if (addType.value.includes('해외')) {
@@ -520,6 +533,7 @@ window.submitAdd = function() {
     let date = document.getElementById('addDate').value;
     let type = document.getElementById('addType').value;
     let name = document.getElementById('addName').value.trim();
+    let code = document.getElementById('addCode').value.trim();
     let qty = Number(document.getElementById('addQty').value);
     let price = Number(document.getElementById('addPrice').value);
     let rate = Number(document.getElementById('addRate').value) || 1.0;
@@ -529,12 +543,14 @@ window.submitAdd = function() {
         return;
     }
 
+    if (code) tickerMap[name] = code;
+
     transactions.unshift({
         portfolio: "수동입력",
         date: date,
         type: type,
         name: name,
-        code: '',
+        code: code,
         quantity: qty,
         price: price,
         exchangeRate: type.includes('해외') ? rate : 1.0
@@ -553,5 +569,5 @@ function showToast(msg) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    initApp(); // render 대신 initApp 실행
+    initApp(); 
 });
