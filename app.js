@@ -1,3 +1,4 @@
+// 초기 데이터 로드
 let transactions = [];
 if (typeof initialTransactions !== 'undefined') {
   transactions = initialTransactions;
@@ -15,12 +16,27 @@ let chartInstance = null;
 let currentPrices = {}; 
 let currentUsdKrw = 1300.0; 
 
+// 종목명 -> 티커(코드) 기억 맵
 let tickerMap = {};
 transactions.forEach(tx => {
     if (tx.name && tx.code) {
         tickerMap[tx.name] = tx.code;
     }
 });
+
+function isTxOverseas(tx) {
+    if (tx.exchangeRate > 100) return true; 
+    if (tx.type && tx.type.includes('해외')) return true; 
+    if (tx.name === '달러') return true; 
+    if (tx.type === '주식') {
+        if (tx.code && (tx.code.includes('KRX') || tx.code.includes('KOSDAQ'))) return false;
+        return true;
+    }
+    return false;
+}
+
+// ▼▼▼ 여기에 직접 발급받으신 구글 웹앱 URL을 붙여넣으세요 ▼▼▼
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbybtTcU_U83nQwiSjOriBk02wJcBdJ98Pmb-rfOQ1rsW4MvGR_BwwDnxBhKjBshr3kzRA/exec"; 
 
 function num(n) { return Math.round(n).toLocaleString('ko-KR'); }
 function usd(n) { return '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
@@ -48,13 +64,8 @@ async function fetchHistoricalRate(dateStr) {
 if (typeof Chart !== 'undefined') { Chart.defaults.color = '#8f95b2'; }
 
 async function initApp() {
-    // 1. 화면 즉시 렌더링 (대기 시간 제거)
     render(); 
     
-    // ▼▼▼ 여기에 1단계에서 발급받은 새로운 웹 앱 URL을 붙여넣으세요 ▼▼▼
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbybtTcU_U83nQwiSjOriBk02wJcBdJ98Pmb-rfOQ1rsW4MvGR_BwwDnxBhKjBshr3kzRA/exec"; 
-    
-    // 2. 백그라운드에서 실시간 데이터 호출
     let ratePromise = fetch('https://api.frankfurter.app/latest?from=USD&to=KRW')
         .then(res => res.json())
         .then(data => { if (data && data.rates && data.rates.KRW) currentUsdKrw = data.rates.KRW; })
@@ -70,7 +81,6 @@ async function initApp() {
             .catch(e => console.log("실시간 주가 로드 실패"));
     }
 
-    // 3. API 조회가 완료되면 새로운 가격 정보로 화면을 다시 그림 (자연스러운 업데이트)
     await Promise.all([ratePromise, pricePromise]);
     render(); 
 }
@@ -94,7 +104,7 @@ function render() {
     const today = new Date();
     
     transactions.forEach(tx => {
-        let isOverseas = tx.type === '주식' || tx.type.includes('해외') || tx.exchangeRate > 100 || tx.name.includes('달러');
+        let isOverseas = isTxOverseas(tx);
         let amountKRW = isOverseas ? (tx.quantity * tx.price * tx.exchangeRate) : (tx.quantity * tx.price);
         
         let txDate = new Date(tx.date);
@@ -219,7 +229,6 @@ function render() {
             let pColor = getColorClass(stockProfitKRW);
             let pSign = getSign(stockProfitKRW);
             
-            // 4열 UI 맵핑
             html += `
                 <div class="kw-row" onclick="openStockDetail('${name}')">
                     <div class="col-name">
@@ -270,7 +279,7 @@ function render() {
         html += `
             <div class="overlay" id="ovAdd">
                 <div class="sheet">
-                    <div class="sheet-title">새 종목 기록<button class="close" onclick="closeModal()">✕</button></div>
+                    <div class="sheet-title">새 종목 추가<button class="close" onclick="closeModal()">✕</button></div>
                     <div class="field"><label>날짜</label><input type="date" id="addDate" value="${new Date().toISOString().split('T')[0]}"></div>
                     <div class="field"><label>구분</label>
                         <select id="addType">
@@ -278,7 +287,7 @@ function render() {
                             <option value="주식(해외)" ${pType === '주식(해외)' ? 'selected' : ''}>주식(해외)</option>
                         </select>
                     </div>
-                    <div class="field"><label>종목명 (입력 시 티커 자동완성)</label><input type="text" id="addName" placeholder="예: 삼성전자" value="${pName}"></div>
+                    <div class="field"><label>종목명</label><input type="text" id="addName" placeholder="예: 삼성전자" value="${pName}"></div>
                     <div class="field"><label>종목코드 / 티커 (API 연동용)</label><input type="text" id="addCode" placeholder="예: KRX:005930 또는 AAPL" value="${pCode}"></div>
                     <div class="field"><label>수량 (매도 시 -음수 입력)</label><input type="number" step="0.0001" id="addQty" placeholder="예: 매수 10 / 매도 -5"></div>
                     <div class="field"><label>거래 단가</label><input type="number" step="0.01" id="addPrice" placeholder="0"></div>
@@ -299,7 +308,7 @@ function render() {
         
         let stockTxs = transactions.filter(tx => tx.name === selectedStock).sort((a,b) => new Date(b.date) - new Date(a.date));
         let listHtml = stockTxs.map(tx => {
-            let isOvs = tx.type === '주식' || tx.type.includes('해외') || tx.exchangeRate > 100 || tx.name.includes('달러');
+            let isOvs = isTxOverseas(tx);
             let pStr = isOvs ? usd(tx.price) : num(tx.price)+'원';
             let actionType = tx.quantity > 0 ? '<span class="c-up">매수</span>' : '<span class="c-down">매도</span>';
             
@@ -408,7 +417,7 @@ window.submitDetailAdd = function(code) {
         code: code || '',
         quantity: qty,
         price: price,
-        exchangeRate: type.includes('해외') || type === '주식' ? rate : 1.0
+        exchangeRate: isTxOverseas(pObj) ? rate : 1.0
     });
 
     render(); 
@@ -488,8 +497,18 @@ function bindModalEvents() {
 
     addName.addEventListener('input', function() {
         let n = this.value.trim();
-        if (tickerMap[n]) {
-            addCode.value = tickerMap[n];
+        
+        // 1. 종목명을 다 지우면 코드도 초기화
+        if (n === '') {
+            addCode.value = ''; 
+        } 
+        // 2. 기존 보유 종목 데이터에 있으면 불러오기
+        else if (tickerMap[n]) {
+            addCode.value = tickerMap[n]; 
+        } 
+        // 3. 해외 주식이고 영문으로 입력 중이면 티커일 확률이 높으므로 대문자로 자동 입력
+        else if (/^[a-zA-Z0-9]+$/.test(n) && addType.value.includes('해외')) {
+            addCode.value = n.toUpperCase();
         }
     });
 
@@ -541,6 +560,8 @@ window.submitAdd = function() {
 
     if (code) tickerMap[name] = code;
 
+    let isOvs = type.includes('해외') || type === '주식';
+
     transactions.unshift({
         portfolio: "수동입력",
         date: date,
@@ -549,7 +570,7 @@ window.submitAdd = function() {
         code: code,
         quantity: qty,
         price: price,
-        exchangeRate: type.includes('해외') ? rate : 1.0
+        exchangeRate: isOvs ? rate : 1.0
     });
 
     closeModal();
