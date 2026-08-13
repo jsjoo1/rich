@@ -1,15 +1,28 @@
-// 1. 초기 데이터 로드 (initial_data.js)
 let transactions = [];
 if (typeof initialTransactions !== 'undefined') {
   transactions = [...initialTransactions];
 }
 
-// 💡 2. 브라우저 저장소(localStorage)에 사용자가 직접 추가한 기록 불러오기 (새로고침 방지)
 let savedTxs = JSON.parse(localStorage.getItem('mySavedTxs') || '[]');
 transactions = [...savedTxs, ...transactions];
 
-// 💡 3. 브라우저 저장소에서 대출 목록 불러오기
 let loans = JSON.parse(localStorage.getItem('myLoans') || '[]');
+// 기존 대출 데이터가 있다면 새로운 "내역(records)" 기반 구조로 자동 마이그레이션
+loans = loans.map(l => {
+    if(!l.id) l.id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
+    if(!l.records) {
+        l.records = [];
+        if(l.amount && Number(l.amount) > 0) {
+            l.records.push({
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                date: l.startDate || new Date().toISOString().split('T')[0],
+                amount: Number(l.amount)
+            });
+        }
+    }
+    return l;
+});
+localStorage.setItem('myLoans', JSON.stringify(loans));
 
 let modal = null;
 let selectedStock = null; 
@@ -109,47 +122,32 @@ function render() {
         try { cursorPosition = document.activeElement.selectionStart || 0; } catch(e){}
     }
 
+    // 💡 화면 안의 모든 input, select 값을 싹 다 기억 (동적 ID 포함)
     let tempInputs = {};
-    ['searchInput', 'sortSelect', 'addDate', 'addType', 'addName', 'addCode', 'addQty', 'addPrice', 'addRate',
-     'detailAddDate', 'detailAddQty', 'detailAddPrice', 'detailAddRate',
-     'loanName', 'loanType', 'loanAmount', 'loanRate', 'loanStartDate'].forEach(id => {
-        let el = document.getElementById(id);
-        if(el) tempInputs[id] = el.value;
+    document.querySelectorAll('input, select').forEach(el => {
+        if(el.id) tempInputs[el.id] = el.value;
     });
 
     const app = document.getElementById('app');
+    const today = new Date();
     
     let totalInvested = 0;
     let accruedInterest = 0;
     let totalCurrentValue = 0; 
     let portfolio = {};
-    const today = new Date();
     
-    // 💡 대출 이자 계산 로직 분리
-    let minusAccountRate = 0;
-    
+    // 💡 정밀한 일할 대출 이자 계산 (내역 기반)
     loans.forEach(loan => {
-        if (loan.type === '전액대출') {
-            // 전액대출: (대출원금 * 연이율 / 365) * 실행일수
-            let startDate = new Date(loan.startDate);
-            let diffDays = Math.max(0, Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
-            accruedInterest += loan.amount * (loan.rate / 100) / 365 * diffDays;
-        } else if (loan.type === '마이너스통장') {
-            // 마이너스통장: 이자율만 설정해두고 주식 매입(실행) 금액에서 일할 계산
-            minusAccountRate = loan.rate / 100;
-        }
+        loan.records.forEach(rec => {
+            let recDate = new Date(rec.date);
+            let diffDays = Math.max(0, Math.ceil((today.getTime() - recDate.getTime()) / (1000 * 60 * 60 * 24)));
+            accruedInterest += rec.amount * (loan.rate / 100) / 365 * diffDays;
+        });
     });
     
     transactions.forEach(tx => {
         let isOverseas = isTxOverseas(tx);
         let amountKRW = isOverseas ? (tx.quantity * tx.price * tx.exchangeRate) : (tx.quantity * tx.price);
-        
-        // 마이너스 통장이 설정되어 있다면 주식 매입금에 대한 이자 계산
-        if (minusAccountRate > 0 && tx.quantity > 0) {
-            let txDate = new Date(tx.date);
-            let diffDays = Math.max(0, Math.ceil((today.getTime() - txDate.getTime()) / (1000 * 60 * 60 * 24)));
-            accruedInterest += amountKRW * minusAccountRate / 365 * diffDays;
-        }
         
         let tickerKey = tx.code || tx.name;
         let curPrice = currentPrices[tickerKey] || tx.price;
@@ -309,7 +307,6 @@ function render() {
     html += `</div>`;
     html += `<button class="fab" id="fabAdd">+</button>`;
 
-    // 💡 모달창 렌더링
     if(modal === 'add') {
         let pName = selectedStock || '';
         let pType = '국내주식';
@@ -402,54 +399,87 @@ function render() {
             </div>
         `;
     } 
-    // 💡 대출 관리 모달
+    // 💡 대출 관리 모달창
     else if (modal === 'loan') {
         let loanListHtml = loans.map((l, idx) => {
-            return `
-                <div style="background:var(--surface-sub); padding:16px; border-radius:12px; margin-bottom:12px; border:1px solid rgba(255,255,255,0.05);">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                        <span style="font-weight:700; color:var(--text);">${l.name} <span style="font-size:11px; color:var(--primary); margin-left:4px;">${l.type}</span></span>
-                        <button onclick="deleteLoan(${idx})" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:12px;">삭제</button>
+            let currentPrincipal = 0;
+            let currentInterest = 0;
+            let todayTime = today.getTime();
+
+            // 기록(실행/상환) 목록 생성 및 잔액/이자 계산
+            let recordsHtml = l.records.sort((a,b)=> new Date(b.date) - new Date(a.date)).map(rec => {
+                currentPrincipal += rec.amount;
+                let recTime = new Date(rec.date).getTime();
+                let diffDays = Math.max(0, Math.ceil((todayTime - recTime) / (1000 * 60 * 60 * 24)));
+                currentInterest += rec.amount * (l.rate / 100) / 365 * diffDays;
+
+                let isRepay = rec.amount < 0;
+                let amtStr = isRepay ? num(rec.amount) : '+' + num(rec.amount);
+                let color = isRepay ? 'var(--primary)' : 'var(--danger)';
+
+                return `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding: 6px 0; border-bottom:1px solid rgba(255,255,255,0.02); font-size:13px;">
+                        <span style="color:var(--text-soft);">${rec.date}</span>
+                        <div>
+                            <span style="color:${color}; font-weight:600; margin-right:8px;">${amtStr}원</span>
+                            <button onclick="deleteLoanRecord('${l.id}', '${rec.id}')" style="background:var(--surface); border:1px solid var(--line); color:var(--text-soft); font-size:10px; cursor:pointer; padding:2px 6px; border-radius:4px;">삭제</button>
+                        </div>
                     </div>
-                    <div style="font-size:13px; color:var(--text-soft); line-height:1.6;">
-                        ${l.type === '전액대출' ? `원금: ${num(l.amount)}원<br>` : ''}
-                        연 이자율: <span style="color:var(--text); font-weight:600;">${l.rate}%</span><br>
-                        실행일: ${l.startDate}
+                `;
+            }).join('');
+
+            return `
+                <div style="background:var(--surface-sub); padding:16px; border-radius:12px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.05);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <span style="font-weight:800; color:var(--text); font-size:16px;">${l.name} <span style="font-size:12px; color:var(--primary); margin-left:4px; font-weight:600;">연 ${l.rate}%</span></span>
+                        <div>
+                            <button onclick="editLoan('${l.id}')" style="background:transparent; border:none; color:var(--text); cursor:pointer; font-size:13px; padding:4px 8px;">수정</button>
+                            <button onclick="deleteLoan('${l.id}')" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:13px; padding:4px 8px;">대출삭제</button>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px;">
+                        <span style="color:var(--text-soft);">현재 남은 원금 (잔액)</span>
+                        <span style="font-weight:700;">${num(currentPrincipal)}원</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:16px; font-size:14px;">
+                        <span style="color:var(--text-soft);">발생한 누적 이자</span>
+                        <span style="font-weight:700; color:var(--danger);">${num(currentInterest)}원</span>
+                    </div>
+
+                    <div style="background:rgba(0,0,0,0.15); padding:12px; border-radius:8px; margin-bottom:12px;">
+                        <div style="font-size:12px; color:var(--text-soft); margin-bottom:8px; font-weight:700;">대출 실행 및 상환 내역</div>
+                        ${recordsHtml}
+                        ${l.records.length === 0 ? '<div style="font-size:12px; color:var(--text-soft);">내역이 없습니다. (아래에서 추가해주세요)</div>' : ''}
+                    </div>
+
+                    <div style="display:flex; gap:6px;">
+                        <input type="date" id="recDate_${l.id}" value="${new Date().toISOString().split('T')[0]}" style="flex:1; font-size:13px; padding:10px; background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:8px;">
+                        <input type="number" id="recAmt_${l.id}" placeholder="실행금액 (-상환)" style="flex:1.5; font-size:13px; padding:10px; background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:8px;">
+                        <button onclick="addLoanRecord('${l.id}')" style="background:var(--primary); color:#fff; border:none; border-radius:8px; padding:0 14px; font-size:13px; font-weight:700; cursor:pointer;">내역 추가</button>
                     </div>
                 </div>
             `;
         }).join('');
 
-        if (loans.length === 0) {
-            loanListHtml = `<div style="text-align:center; padding:20px; color:var(--text-soft); font-size:13px;">등록된 대출이 없습니다.</div>`;
-        }
-
         html += `
             <div class="overlay" id="ovLoan">
                 <div class="sheet">
-                    <div class="sheet-title">🏦 대출 및 이자 관리<button class="close" onclick="closeModal()">✕</button></div>
+                    <div class="sheet-title" style="margin-bottom:24px;">🏦 대출 및 이자 관리<button class="close" onclick="closeModal()">✕</button></div>
                     
-                    <div style="max-height: 250px; overflow-y:auto; margin-bottom:24px;">
+                    <div style="max-height: 400px; overflow-y:auto; margin-bottom:24px;">
                         ${loanListHtml}
+                        ${loans.length === 0 ? `<div style="text-align:center; padding:30px; color:var(--text-soft); font-size:14px;">등록된 대출이 없습니다.<br>아래에서 추가해주세요.</div>` : ''}
                     </div>
 
                     <div style="border-top:1px dashed var(--line); padding-top:20px;">
-                        <div style="font-size: 14px; font-weight: 800; margin-bottom: 12px; color: var(--text);">+ 새로운 대출 추가</div>
+                        <div style="font-size: 15px; font-weight: 800; margin-bottom: 16px; color: var(--text);" id="loanFormTitle">+ 새로운 대출 추가</div>
                         
-                        <div class="field"><label>대출명 (예: 신한은행 마통)</label><input type="text" id="loanName" placeholder="대출 이름 입력"></div>
-                        <div class="field"><label>대출 종류</label>
-                            <select id="loanType" onchange="toggleLoanAmountField(this.value)">
-                                <option value="전액대출">전액대출 (일시금)</option>
-                                <option value="마이너스통장">마이너스통장 (매입가 기준 실행)</option>
-                            </select>
-                        </div>
-                        <div class="field" id="loanAmountWrap"><label>대출 원금 (원)</label><input type="number" id="loanAmount" placeholder="예: 50000000"></div>
-                        <div class="filter-sort-row" style="margin-bottom:12px;">
-                            <div class="field" style="flex:1; margin-bottom:0;"><label>연 이자율 (%)</label><input type="number" step="0.01" id="loanRate" placeholder="예: 5.5"></div>
-                            <div class="field" style="flex:1; margin-bottom:0;"><label>대출 실행일</label><input type="date" id="loanStartDate" value="${new Date().toISOString().split('T')[0]}"></div>
-                        </div>
+                        <input type="hidden" id="editLoanId" value="">
+                        <div class="field"><label>대출명 (예: 신한 마통, 전세자금대출)</label><input type="text" id="loanName" placeholder="대출 이름 입력"></div>
+                        <div class="field"><label>연 이자율 (%)</label><input type="number" step="0.01" id="loanRate" placeholder="예: 5.5"></div>
                         
-                        <button class="primary-btn" onclick="submitLoanAdd()" style="margin-top: 10px;">대출 등록하기</button>
+                        <button class="primary-btn" onclick="submitLoanAdd()" id="loanSubmitBtn" style="margin-top: 10px;">대출 등록하기</button>
                     </div>
                 </div>
             </div>
@@ -458,6 +488,7 @@ function render() {
 
     app.innerHTML = html;
 
+    // 💡 저장해둔 사용자 폼 입력값 및 포커스 복구 (10초 새로고침에도 입력내용 날아감 방지)
     Object.keys(tempInputs).forEach(id => {
         let el = document.getElementById(id);
         if(el && tempInputs[id] !== undefined) el.value = tempInputs[id];
@@ -488,9 +519,6 @@ function render() {
         bindModalEvents();
     } else if (modal === 'detail' && selectedStock) {
         bindDetailRateEvent();
-    } else if (modal === 'loan') {
-        let lType = document.getElementById('loanType');
-        if (lType) window.toggleLoanAmountField(lType.value);
     }
 }
 
@@ -509,9 +537,100 @@ window.openLoanModal = function() {
     render();
 }
 
-window.toggleLoanAmountField = function(val) {
-    let wrap = document.getElementById('loanAmountWrap');
-    if(wrap) wrap.style.display = (val === '마이너스통장') ? 'none' : 'block';
+// 💡 대출 모달의 액션 함수들
+window.submitLoanAdd = function() {
+    let id = document.getElementById('editLoanId').value;
+    let name = document.getElementById('loanName').value.trim();
+    let rate = Number(document.getElementById('loanRate').value);
+
+    if (!name || !rate) {
+        showToast('대출명과 이자율을 정확히 입력해주세요.');
+        return;
+    }
+
+    if (id) {
+        let loan = loans.find(l => l.id === id);
+        if(loan) {
+            loan.name = name;
+            loan.rate = rate;
+        }
+    } else {
+        loans.push({ 
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+            name: name, 
+            rate: rate, 
+            records: [] 
+        });
+    }
+    
+    localStorage.setItem('myLoans', JSON.stringify(loans));
+    
+    // 입력폼 초기화
+    document.getElementById('editLoanId').value = '';
+    document.getElementById('loanName').value = '';
+    document.getElementById('loanRate').value = '';
+    document.getElementById('loanFormTitle').innerText = '+ 새로운 대출 추가';
+    document.getElementById('loanSubmitBtn').innerText = '대출 등록하기';
+    
+    render();
+    showToast(id ? '대출 정보가 수정되었습니다.' : '새 대출이 등록되었습니다.');
+}
+
+window.editLoan = function(id) {
+    let loan = loans.find(l => l.id === id);
+    if(loan) {
+        document.getElementById('editLoanId').value = loan.id;
+        document.getElementById('loanName').value = loan.name;
+        document.getElementById('loanRate').value = loan.rate;
+        document.getElementById('loanFormTitle').innerText = '✏️ 대출 정보 수정';
+        document.getElementById('loanSubmitBtn').innerText = '대출 수정완료';
+    }
+}
+
+window.deleteLoan = function(id) {
+    if (confirm('이 대출과 모든 내역을 정말 삭제하시겠습니까?')) {
+        loans = loans.filter(l => l.id !== id);
+        localStorage.setItem('myLoans', JSON.stringify(loans));
+        render();
+    }
+}
+
+window.addLoanRecord = function(loanId) {
+    let dateInput = document.getElementById(`recDate_${loanId}`);
+    let amtInput = document.getElementById(`recAmt_${loanId}`);
+    
+    let date = dateInput.value;
+    let amount = Number(amtInput.value);
+    
+    if(!date || !amount) {
+        showToast('날짜와 금액을 정확히 입력해주세요.');
+        return;
+    }
+
+    let loan = loans.find(l => l.id === loanId);
+    if(loan) {
+        loan.records.push({
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+            date: date,
+            amount: amount
+        });
+        localStorage.setItem('myLoans', JSON.stringify(loans));
+        
+        amtInput.value = ''; // 금액칸 비우기
+        render();
+        showToast('대출/상환 내역이 추가되었습니다.');
+    }
+}
+
+window.deleteLoanRecord = function(loanId, recId) {
+    if (confirm('해당 내역을 삭제하시겠습니까?')) {
+        let loan = loans.find(l => l.id === loanId);
+        if(loan) {
+            loan.records = loan.records.filter(r => r.id !== recId);
+            localStorage.setItem('myLoans', JSON.stringify(loans));
+            render();
+        }
+    }
 }
 
 window.submitDetailAdd = function(code) {
@@ -546,7 +665,7 @@ window.submitDetailAdd = function(code) {
 
     transactions.unshift(newTx);
     savedTxs.unshift(newTx);
-    localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs)); // 💡 영구 저장
+    localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs)); // 영구 보존
 
     qtyInput.value = '';
     priceInput.value = '';
@@ -554,34 +673,6 @@ window.submitDetailAdd = function(code) {
     render(); 
     showToast('매매 기록이 영구적으로 추가되었습니다.');
     setTimeout(bindDetailRateEvent, 50);
-}
-
-// 💡 대출 추가 및 삭제 로직
-window.submitLoanAdd = function() {
-    let name = document.getElementById('loanName').value.trim();
-    let type = document.getElementById('loanType').value;
-    let amount = Number(document.getElementById('loanAmount').value) || 0;
-    let rate = Number(document.getElementById('loanRate').value);
-    let startDate = document.getElementById('loanStartDate').value;
-
-    if (!name || !rate || (type === '전액대출' && !amount)) {
-        showToast('대출 정보를 정확히 입력해주세요.');
-        return;
-    }
-
-    loans.push({ name, type, amount, rate, startDate });
-    localStorage.setItem('myLoans', JSON.stringify(loans)); // 💡 대출 영구 저장
-
-    render();
-    showToast('대출이 등록되었습니다.');
-}
-
-window.deleteLoan = function(index) {
-    if (confirm('이 대출 기록을 삭제하시겠습니까?')) {
-        loans.splice(index, 1);
-        localStorage.setItem('myLoans', JSON.stringify(loans));
-        render();
-    }
 }
 
 function bindDetailRateEvent() {
@@ -656,10 +747,19 @@ function bindModalEvents() {
 
     addName.addEventListener('input', function() {
         let n = this.value.trim();
-        if (n === '') addCode.value = ''; 
-        else if (tickerMap[n]) addCode.value = tickerMap[n]; 
-        else if (/^[a-zA-Z0-9]+$/.test(n) && addType.value.includes('해외')) addCode.value = n.toUpperCase();
-        else addCode.value = ''; 
+        
+        if (n === '') {
+            addCode.value = ''; 
+        } 
+        else if (tickerMap[n]) {
+            addCode.value = tickerMap[n]; 
+        } 
+        else if (/^[a-zA-Z0-9]+$/.test(n) && addType.value.includes('해외')) {
+            addCode.value = n.toUpperCase();
+        }
+        else {
+            addCode.value = ''; 
+        }
     });
 
     async function checkRate() {
@@ -724,10 +824,10 @@ window.submitAdd = function() {
 
     transactions.unshift(newTx);
     savedTxs.unshift(newTx);
-    localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs)); // 💡 영구 저장
+    localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs)); 
 
     closeModal();
-    showToast('새로운 종목이 영구적으로 추가되었습니다.');
+    showToast('새로운 종목이 추가되었습니다.');
 }
 
 function showToast(msg) {
