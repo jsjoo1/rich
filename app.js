@@ -1,10 +1,15 @@
-// 초기 데이터 로드
+// 1. 초기 데이터 로드 (initial_data.js)
 let transactions = [];
 if (typeof initialTransactions !== 'undefined') {
-  transactions = initialTransactions;
+  transactions = [...initialTransactions];
 }
 
-let loanSettings = { rate: 5.5 };
+// 💡 2. 브라우저 저장소(localStorage)에 사용자가 직접 추가한 기록 불러오기 (새로고침 방지)
+let savedTxs = JSON.parse(localStorage.getItem('mySavedTxs') || '[]');
+transactions = [...savedTxs, ...transactions];
+
+// 💡 3. 브라우저 저장소에서 대출 목록 불러오기
+let loans = JSON.parse(localStorage.getItem('myLoans') || '[]');
 
 let modal = null;
 let selectedStock = null; 
@@ -16,7 +21,6 @@ let chartInstance = null;
 let currentPrices = {}; 
 let currentUsdKrw = 1300.0; 
 
-// 종목명 -> 티커(코드) 기억 맵
 let tickerMap = {};
 transactions.forEach(tx => {
     if (tx.name && tx.code) {
@@ -64,7 +68,6 @@ async function fetchHistoricalRate(dateStr) {
 
 if (typeof Chart !== 'undefined') { Chart.defaults.color = '#8f95b2'; }
 
-// 🚀 백그라운드 데이터 수집 함수 (5초마다 자동 실행됨)
 async function updatePricesInBackground() {
     let uniqueTickers = [...new Set(transactions.map(t => t.code || t.name).filter(c => c))];
     
@@ -85,10 +88,8 @@ async function updatePricesInBackground() {
     render(); 
 }
 
-// 🚀 앱 접속 시 최초 화면 로딩 및 초기화
 async function initApp() {
     const app = document.getElementById('app');
-    
     app.innerHTML = `
         <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; gap:16px;">
             <div style="font-size:16px; font-weight:700; color:var(--text-soft);">실시간 가격 정보를 불러오는 중입니다...</div>
@@ -97,13 +98,10 @@ async function initApp() {
     `;
 
     await updatePricesInBackground();
-    
-    // 💡 10초(10000)에서 5초(5000) 간격으로 수정 완료!
     setInterval(updatePricesInBackground, 5000);
 }
 
 function render() {
-    // 💡 화면이 업데이트될 때 사용자가 입력 중이던 값과 커서 위치를 기억하는 로직
     let focusedElementId = null;
     let cursorPosition = 0;
     if (document.activeElement && document.activeElement.id) {
@@ -113,7 +111,8 @@ function render() {
 
     let tempInputs = {};
     ['searchInput', 'sortSelect', 'addDate', 'addType', 'addName', 'addCode', 'addQty', 'addPrice', 'addRate',
-     'detailAddDate', 'detailAddQty', 'detailAddPrice', 'detailAddRate'].forEach(id => {
+     'detailAddDate', 'detailAddQty', 'detailAddPrice', 'detailAddRate',
+     'loanName', 'loanType', 'loanAmount', 'loanRate', 'loanStartDate'].forEach(id => {
         let el = document.getElementById(id);
         if(el) tempInputs[id] = el.value;
     });
@@ -126,13 +125,31 @@ function render() {
     let portfolio = {};
     const today = new Date();
     
+    // 💡 대출 이자 계산 로직 분리
+    let minusAccountRate = 0;
+    
+    loans.forEach(loan => {
+        if (loan.type === '전액대출') {
+            // 전액대출: (대출원금 * 연이율 / 365) * 실행일수
+            let startDate = new Date(loan.startDate);
+            let diffDays = Math.max(0, Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
+            accruedInterest += loan.amount * (loan.rate / 100) / 365 * diffDays;
+        } else if (loan.type === '마이너스통장') {
+            // 마이너스통장: 이자율만 설정해두고 주식 매입(실행) 금액에서 일할 계산
+            minusAccountRate = loan.rate / 100;
+        }
+    });
+    
     transactions.forEach(tx => {
         let isOverseas = isTxOverseas(tx);
         let amountKRW = isOverseas ? (tx.quantity * tx.price * tx.exchangeRate) : (tx.quantity * tx.price);
         
-        let txDate = new Date(tx.date);
-        let diffDays = Math.max(0, Math.ceil((today.getTime() - txDate.getTime()) / (1000 * 60 * 60 * 24)));
-        accruedInterest += amountKRW * (loanSettings.rate / 100) / 365 * diffDays;
+        // 마이너스 통장이 설정되어 있다면 주식 매입금에 대한 이자 계산
+        if (minusAccountRate > 0 && tx.quantity > 0) {
+            let txDate = new Date(tx.date);
+            let diffDays = Math.max(0, Math.ceil((today.getTime() - txDate.getTime()) / (1000 * 60 * 60 * 24)));
+            accruedInterest += amountKRW * minusAccountRate / 365 * diffDays;
+        }
         
         let tickerKey = tx.code || tx.name;
         let curPrice = currentPrices[tickerKey] || tx.price;
@@ -204,8 +221,10 @@ function render() {
                     <span class="lbl">시세단순손익</span>
                     <span class="val ${getColorClass(marketProfit)}">${getSign(marketProfit)}${num(marketProfit)}</span>
                 </div>
-                <div class="kw-sg-item">
-                    <span class="lbl">누적대출이자</span>
+                <div class="kw-sg-item" style="cursor:pointer;" onclick="openLoanModal()">
+                    <span class="lbl" style="color:var(--primary); font-weight:700; display:flex; align-items:center; gap:4px;">
+                        누적대출이자 <span style="background:var(--surface-sub); padding:2px 6px; border-radius:4px; font-size:10px;">⚙️ 관리</span>
+                    </span>
                     <span class="val" style="color:var(--text-soft); font-weight:400;">-${num(accruedInterest)}</span>
                 </div>
             </div>
@@ -290,6 +309,7 @@ function render() {
     html += `</div>`;
     html += `<button class="fab" id="fabAdd">+</button>`;
 
+    // 💡 모달창 렌더링
     if(modal === 'add') {
         let pName = selectedStock || '';
         let pType = '국내주식';
@@ -381,11 +401,63 @@ function render() {
                 </div>
             </div>
         `;
+    } 
+    // 💡 대출 관리 모달
+    else if (modal === 'loan') {
+        let loanListHtml = loans.map((l, idx) => {
+            return `
+                <div style="background:var(--surface-sub); padding:16px; border-radius:12px; margin-bottom:12px; border:1px solid rgba(255,255,255,0.05);">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <span style="font-weight:700; color:var(--text);">${l.name} <span style="font-size:11px; color:var(--primary); margin-left:4px;">${l.type}</span></span>
+                        <button onclick="deleteLoan(${idx})" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:12px;">삭제</button>
+                    </div>
+                    <div style="font-size:13px; color:var(--text-soft); line-height:1.6;">
+                        ${l.type === '전액대출' ? `원금: ${num(l.amount)}원<br>` : ''}
+                        연 이자율: <span style="color:var(--text); font-weight:600;">${l.rate}%</span><br>
+                        실행일: ${l.startDate}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        if (loans.length === 0) {
+            loanListHtml = `<div style="text-align:center; padding:20px; color:var(--text-soft); font-size:13px;">등록된 대출이 없습니다.</div>`;
+        }
+
+        html += `
+            <div class="overlay" id="ovLoan">
+                <div class="sheet">
+                    <div class="sheet-title">🏦 대출 및 이자 관리<button class="close" onclick="closeModal()">✕</button></div>
+                    
+                    <div style="max-height: 250px; overflow-y:auto; margin-bottom:24px;">
+                        ${loanListHtml}
+                    </div>
+
+                    <div style="border-top:1px dashed var(--line); padding-top:20px;">
+                        <div style="font-size: 14px; font-weight: 800; margin-bottom: 12px; color: var(--text);">+ 새로운 대출 추가</div>
+                        
+                        <div class="field"><label>대출명 (예: 신한은행 마통)</label><input type="text" id="loanName" placeholder="대출 이름 입력"></div>
+                        <div class="field"><label>대출 종류</label>
+                            <select id="loanType" onchange="toggleLoanAmountField(this.value)">
+                                <option value="전액대출">전액대출 (일시금)</option>
+                                <option value="마이너스통장">마이너스통장 (매입가 기준 실행)</option>
+                            </select>
+                        </div>
+                        <div class="field" id="loanAmountWrap"><label>대출 원금 (원)</label><input type="number" id="loanAmount" placeholder="예: 50000000"></div>
+                        <div class="filter-sort-row" style="margin-bottom:12px;">
+                            <div class="field" style="flex:1; margin-bottom:0;"><label>연 이자율 (%)</label><input type="number" step="0.01" id="loanRate" placeholder="예: 5.5"></div>
+                            <div class="field" style="flex:1; margin-bottom:0;"><label>대출 실행일</label><input type="date" id="loanStartDate" value="${new Date().toISOString().split('T')[0]}"></div>
+                        </div>
+                        
+                        <button class="primary-btn" onclick="submitLoanAdd()" style="margin-top: 10px;">대출 등록하기</button>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     app.innerHTML = html;
 
-    // 💡 저장해둔 사용자 폼 입력값 및 포커스 복구
     Object.keys(tempInputs).forEach(id => {
         let el = document.getElementById(id);
         if(el && tempInputs[id] !== undefined) el.value = tempInputs[id];
@@ -409,11 +481,16 @@ function render() {
     if(ovAdd) ovAdd.onclick = (e) => { if(e.target === ovAdd) closeModal(); };
     let ovDetail = document.getElementById('ovDetail');
     if(ovDetail) ovDetail.onclick = (e) => { if(e.target === ovDetail) closeModal(); };
+    let ovLoan = document.getElementById('ovLoan');
+    if(ovLoan) ovLoan.onclick = (e) => { if(e.target === ovLoan) closeModal(); };
 
     if (modal === 'add') {
         bindModalEvents();
     } else if (modal === 'detail' && selectedStock) {
         bindDetailRateEvent();
+    } else if (modal === 'loan') {
+        let lType = document.getElementById('loanType');
+        if (lType) window.toggleLoanAmountField(lType.value);
     }
 }
 
@@ -425,6 +502,16 @@ window.openStockDetail = function(name) {
     selectedStock = name;
     modal = 'detail';
     render();
+}
+
+window.openLoanModal = function() {
+    modal = 'loan';
+    render();
+}
+
+window.toggleLoanAmountField = function(val) {
+    let wrap = document.getElementById('loanAmountWrap');
+    if(wrap) wrap.style.display = (val === '마이너스통장') ? 'none' : 'block';
 }
 
 window.submitDetailAdd = function(code) {
@@ -446,7 +533,7 @@ window.submitDetailAdd = function(code) {
     let pObj = transactions.find(t => t.name === selectedStock);
     let type = pObj ? pObj.type : '국내주식';
 
-    transactions.unshift({
+    let newTx = {
         portfolio: "수동입력",
         date: date,
         type: type,
@@ -455,15 +542,46 @@ window.submitDetailAdd = function(code) {
         quantity: qty,
         price: price,
         exchangeRate: isTxOverseas(pObj) ? rate : 1.0
-    });
+    };
 
-    // 기록 추가 성공 시 입력칸을 즉시 비움
+    transactions.unshift(newTx);
+    savedTxs.unshift(newTx);
+    localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs)); // 💡 영구 저장
+
     qtyInput.value = '';
     priceInput.value = '';
 
     render(); 
-    showToast('매매 기록이 추가되었습니다.');
+    showToast('매매 기록이 영구적으로 추가되었습니다.');
     setTimeout(bindDetailRateEvent, 50);
+}
+
+// 💡 대출 추가 및 삭제 로직
+window.submitLoanAdd = function() {
+    let name = document.getElementById('loanName').value.trim();
+    let type = document.getElementById('loanType').value;
+    let amount = Number(document.getElementById('loanAmount').value) || 0;
+    let rate = Number(document.getElementById('loanRate').value);
+    let startDate = document.getElementById('loanStartDate').value;
+
+    if (!name || !rate || (type === '전액대출' && !amount)) {
+        showToast('대출 정보를 정확히 입력해주세요.');
+        return;
+    }
+
+    loans.push({ name, type, amount, rate, startDate });
+    localStorage.setItem('myLoans', JSON.stringify(loans)); // 💡 대출 영구 저장
+
+    render();
+    showToast('대출이 등록되었습니다.');
+}
+
+window.deleteLoan = function(index) {
+    if (confirm('이 대출 기록을 삭제하시겠습니까?')) {
+        loans.splice(index, 1);
+        localStorage.setItem('myLoans', JSON.stringify(loans));
+        render();
+    }
 }
 
 function bindDetailRateEvent() {
@@ -538,19 +656,10 @@ function bindModalEvents() {
 
     addName.addEventListener('input', function() {
         let n = this.value.trim();
-        
-        if (n === '') {
-            addCode.value = ''; 
-        } 
-        else if (tickerMap[n]) {
-            addCode.value = tickerMap[n]; 
-        } 
-        else if (/^[a-zA-Z0-9]+$/.test(n) && addType.value.includes('해외')) {
-            addCode.value = n.toUpperCase();
-        }
-        else {
-            addCode.value = ''; 
-        }
+        if (n === '') addCode.value = ''; 
+        else if (tickerMap[n]) addCode.value = tickerMap[n]; 
+        else if (/^[a-zA-Z0-9]+$/.test(n) && addType.value.includes('해외')) addCode.value = n.toUpperCase();
+        else addCode.value = ''; 
     });
 
     async function checkRate() {
@@ -602,7 +711,7 @@ window.submitAdd = function() {
 
     let isOvs = type.includes('해외') || type === '주식';
 
-    transactions.unshift({
+    let newTx = {
         portfolio: "수동입력",
         date: date,
         type: type,
@@ -611,10 +720,14 @@ window.submitAdd = function() {
         quantity: qty,
         price: price,
         exchangeRate: isOvs ? rate : 1.0
-    });
+    };
+
+    transactions.unshift(newTx);
+    savedTxs.unshift(newTx);
+    localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs)); // 💡 영구 저장
 
     closeModal();
-    showToast('새로운 종목이 추가되었습니다.');
+    showToast('새로운 종목이 영구적으로 추가되었습니다.');
 }
 
 function showToast(msg) {
