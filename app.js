@@ -88,7 +88,7 @@ async function initApp() {
     await updatePricesInBackground();
     
     if (!loaded) { loaded = true; clearTimeout(timeout); render(); }
-    setInterval(updatePricesInBackground, 5000);
+    setInterval(updatePricesInBackground, 60000);
 }
 
 function render() {
