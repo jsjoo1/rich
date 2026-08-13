@@ -7,7 +7,6 @@
   --text-soft: #8f95b2;
   --primary: #3b82f6;
   --primary-glow: rgba(59, 130, 246, 0.25);
-  /* 국내 주식앱 테마 색상 (빨강=상승/매수, 파랑=하락/매도) */
   --up: #ed3738; 
   --down: #1760d3; 
   --even: #ffffff;
@@ -18,7 +17,6 @@
 body { margin: 0; background-color: #0b0c0e; font-family: "Pretendard", sans-serif; color: var(--text); }
 .app { max-width: 640px; margin: 0 auto; background: var(--bg); min-height: 100vh; position: relative; padding-bottom: 100px; }
 
-/* 상단 요약 (키움증권 스타일) */
 .kw-summary { background: var(--surface); padding: 24px 20px; border-bottom: 8px solid #0b0c0e; }
 .kw-summary-title { font-size: 14px; color: var(--text); font-weight: 700; margin-bottom: 12px; display:flex; align-items:center; }
 .kw-summary-main { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
@@ -29,7 +27,6 @@ body { margin: 0; background-color: #0b0c0e; font-family: "Pretendard", sans-ser
 .kw-sg-item .lbl { color: var(--text-soft); }
 .kw-sg-item .val { font-weight: 600; color: var(--text); text-align: right; }
 
-/* 툴바 (검색, 정렬, 탭) */
 .portfolio-tools { padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; }
 .view-toggles { display: flex; background: var(--surface-sub); border-radius: 12px; padding: 4px; }
 .view-toggles button { flex: 1; background: transparent; border: none; color: var(--text-soft); padding: 8px 0; font-size: 13px; font-weight: 700; border-radius: 8px; cursor: pointer; transition: 0.2s; }
@@ -39,26 +36,23 @@ body { margin: 0; background-color: #0b0c0e; font-family: "Pretendard", sans-ser
 .filter-sort-row select { width: 110px; border: 1px solid var(--line); background: var(--surface-sub); color: var(--text); padding: 10px; border-radius: 10px; font-size: 13px; outline: none; }
 .chart-container { background: var(--surface); padding: 20px; min-height: 300px; display: flex; align-items: center; justify-content: center; }
 
-/* 주식 리스트 (표 형태) */
+/* 4열 그리드 레이아웃 적용 */
 .kw-table { width: 100%; display: flex; flex-direction: column; border-top: 1px solid var(--line); margin-top: 8px;}
-.kw-header { display: grid; grid-template-columns: 1.3fr 1fr 0.9fr 1.1fr; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--text-soft); text-align: right; background: var(--surface-sub); align-items: center;}
+.kw-header { display: grid; grid-template-columns: 1.2fr 0.9fr 0.9fr 1fr; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 11px; color: var(--text-soft); text-align: right; background: var(--surface-sub); align-items: center;}
 .kw-header .col-name { text-align: left; padding-left: 20px; }
 .kw-header .col-amt { padding-right: 20px; }
 
-.kw-row { display: grid; grid-template-columns: 1.3fr 1fr 0.9fr 1.1fr; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; text-align: right; align-items: center; cursor: pointer; transition: background 0.2s; }
+.kw-row { display: grid; grid-template-columns: 1.2fr 0.9fr 0.9fr 1fr; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; text-align: right; align-items: center; cursor: pointer; transition: background 0.2s; }
 .kw-row:active { background: var(--surface-sub); }
-.kw-row .col-name { text-align: left; padding-left: 20px; font-weight: 700; color: var(--text); display: flex; flex-direction: column; gap: 4px; }
-.kw-row .col-name .ticker { font-size: 11px; color: var(--text-soft); font-weight: 400; }
+.kw-row .col-name { text-align: left; padding-left: 20px; font-weight: 800; color: var(--text); display: flex; flex-direction: column; gap: 4px; font-size: 15px; }
+.kw-row .col-name .ticker { font-size: 12px; color: var(--text-soft); font-weight: 600; }
 .kw-row .col { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
-.kw-row .col-qty { font-size: 13px; font-weight: 600; }
 .kw-row .col-amt { padding-right: 20px; }
 
-/* 상태 컬러 클래스 */
 .c-up { color: var(--up) !important; }
 .c-down { color: var(--down) !important; }
 .c-even { color: var(--even) !important; }
 
-/* FAB 버튼 & 모달창 */
 .fab { position: fixed; right: 20px; bottom: 24px; width: 58px; height: 58px; border-radius: 50%; background: var(--primary); color: #fff; border: none; font-size: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 99; box-shadow: 0 8px 24px var(--primary-glow); }
 @media (min-width: 641px) { .fab { right: calc(50% - 300px + 20px); } }
 
@@ -72,7 +66,6 @@ body { margin: 0; background-color: #0b0c0e; font-family: "Pretendard", sans-ser
 .field input, .field select { width: 100%; border: 1px solid var(--line); background: var(--surface-sub); color: var(--text); border-radius: 12px; padding: 12px 14px; font-size: 16px; font-family: inherit; }
 .primary-btn { width: 100%; background: var(--primary); color: #fff; border: none; border-radius: 14px; padding: 14px; font-size: 15px; font-weight: 800; cursor: pointer; margin-top: 10px; }
 
-/* 상세 모달 리스트 */
 .detail-tx-list { margin-top: 10px; border-top: 1px solid var(--line); }
 .detail-tx-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
 .detail-tx-item:last-child { border-bottom: none; }
