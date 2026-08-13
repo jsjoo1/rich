@@ -64,7 +64,7 @@ async function fetchHistoricalRate(dateStr) {
 
 if (typeof Chart !== 'undefined') { Chart.defaults.color = '#8f95b2'; }
 
-// 🚀 백그라운드 데이터 수집 함수 (10초마다 자동 실행됨)
+// 🚀 백그라운드 데이터 수집 함수 (5초마다 자동 실행됨)
 async function updatePricesInBackground() {
     let uniqueTickers = [...new Set(transactions.map(t => t.code || t.name).filter(c => c))];
     
@@ -82,8 +82,6 @@ async function updatePricesInBackground() {
     }
 
     await Promise.all([ratePromise, pricePromise]);
-    
-    // 데이터 수집 후 화면 조용히 리렌더링
     render(); 
 }
 
@@ -91,7 +89,6 @@ async function updatePricesInBackground() {
 async function initApp() {
     const app = document.getElementById('app');
     
-    // 데이터 로드 전 깔끔한 로딩 화면 먼저 표시
     app.innerHTML = `
         <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; gap:16px;">
             <div style="font-size:16px; font-weight:700; color:var(--text-soft);">실시간 가격 정보를 불러오는 중입니다...</div>
@@ -99,15 +96,14 @@ async function initApp() {
         </div>
     `;
 
-    // 1. 최초 데이터 수집을 실행하고 완료될 때까지 기다림 (완료되면 메인 화면 렌더링됨)
     await updatePricesInBackground();
     
-    // 2. 이후 10초(10000ms)마다 백그라운드 갱신 자동 실행 (페이지 새로고침 없음!)
-    setInterval(updatePricesInBackground, 10000);
+    // 💡 10초(10000)에서 5초(5000) 간격으로 수정 완료!
+    setInterval(updatePricesInBackground, 5000);
 }
 
 function render() {
-    // 💡 화면이 업데이트될 때 사용자가 입력 중이던 값과 커서 위치를 기억하는 마법의 로직
+    // 💡 화면이 업데이트될 때 사용자가 입력 중이던 값과 커서 위치를 기억하는 로직
     let focusedElementId = null;
     let cursorPosition = 0;
     if (document.activeElement && document.activeElement.id) {
@@ -389,7 +385,7 @@ function render() {
 
     app.innerHTML = html;
 
-    // 💡 저장해둔 사용자 폼 입력값 및 포커스 복구 (입력 중 화면이 리렌더링되어도 날아가지 않음)
+    // 💡 저장해둔 사용자 폼 입력값 및 포커스 복구
     Object.keys(tempInputs).forEach(id => {
         let el = document.getElementById(id);
         if(el && tempInputs[id] !== undefined) el.value = tempInputs[id];
@@ -414,7 +410,6 @@ function render() {
     let ovDetail = document.getElementById('ovDetail');
     if(ovDetail) ovDetail.onclick = (e) => { if(e.target === ovDetail) closeModal(); };
 
-    // 모달이 열려있을 때만 환율 조회 이벤트 바인딩
     if (modal === 'add') {
         bindModalEvents();
     } else if (modal === 'detail' && selectedStock) {
@@ -433,10 +428,15 @@ window.openStockDetail = function(name) {
 }
 
 window.submitDetailAdd = function(code) {
-    let date = document.getElementById('detailAddDate').value;
-    let qty = Number(document.getElementById('detailAddQty').value);
-    let price = Number(document.getElementById('detailAddPrice').value);
-    let rate = Number(document.getElementById('detailAddRate').value) || 1.0;
+    let dateInput = document.getElementById('detailAddDate');
+    let qtyInput = document.getElementById('detailAddQty');
+    let priceInput = document.getElementById('detailAddPrice');
+    let rateInput = document.getElementById('detailAddRate');
+    
+    let date = dateInput.value;
+    let qty = Number(qtyInput.value);
+    let price = Number(priceInput.value);
+    let rate = rateInput ? (Number(rateInput.value) || 1.0) : 1.0;
     
     if(!qty || !price) {
         showToast('수량과 단가를 입력해주세요');
@@ -457,8 +457,13 @@ window.submitDetailAdd = function(code) {
         exchangeRate: isTxOverseas(pObj) ? rate : 1.0
     });
 
+    // 기록 추가 성공 시 입력칸을 즉시 비움
+    qtyInput.value = '';
+    priceInput.value = '';
+
     render(); 
     showToast('매매 기록이 추가되었습니다.');
+    setTimeout(bindDetailRateEvent, 50);
 }
 
 function bindDetailRateEvent() {
