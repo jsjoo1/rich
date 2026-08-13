@@ -333,19 +333,20 @@ function render() {
                 <div class="sheet" id="modalSheet">
                     <div class="sheet-title">새 종목 추가<button class="close" onclick="closeModal()">✕</button></div>
                     
-                    <div class="field"><label>자금 출처</label>
-                        <select id="addFundSource" onchange="window.toggleFundLoan(this.value, 'addFundLoanWrap')">
-                            <option value="현금">현금 (내 돈으로 매수)</option>
-                            <option value="대출">대출 연동 (매수 시 자동으로 대출금 증가)</option>
-                        </select>
-                    </div>
-                    <div class="field" id="addFundLoanWrap" style="display:none; margin-top:-6px;">
-                        <label>연동할 대출 선택</label>
-                        <select id="addFundLoanId">${loanOptions}</select>
+                    <!-- 💡 자금 출처 메뉴 UI 개선 -->
+                    <div style="background:var(--surface-sub); padding:16px; border-radius:12px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.05);">
+                        <div class="field" style="margin-bottom:8px;"><label>💰 자금 출처 선택</label>
+                            <select id="addFundSource" onchange="window.toggleFundLoan(this.value, 'addFundLoanWrap')" style="background:var(--surface); border:1px solid var(--primary); font-weight:600;">
+                                <option value="현금">현금 (내 돈으로 매수)</option>
+                                <option value="대출">대출 연동 (자동 잔액/이자 계산)</option>
+                            </select>
+                        </div>
+                        <div class="field" id="addFundLoanWrap" style="display:none; margin-bottom:0;">
+                            <label>연동할 대출 계좌</label>
+                            <select id="addFundLoanId">${loanOptions}</select>
+                        </div>
                     </div>
                     
-                    <hr style="border:0; border-top:1px solid rgba(255,255,255,0.05); margin: 20px 0;">
-
                     <div class="field"><label>날짜</label><input type="date" id="addDate" value="${new Date().toISOString().split('T')[0]}"></div>
                     <div class="field"><label>구분</label>
                         <select id="addType">
@@ -407,17 +408,17 @@ function render() {
                             <span style="font-size: 13px; font-weight: 800; color: var(--text);">📝 이 종목 신규 기록 추가</span>
                         </div>
 
-                        <!-- 💡 자금 출처 선택 추가 -->
-                        <div class="filter-sort-row" style="margin-bottom:8px;">
-                            <select id="detailFundSource" onchange="window.toggleFundLoan(this.value, 'detailFundLoanWrap')" style="flex:1;">
-                                <option value="현금">자금출처: 현금</option>
-                                <option value="대출">자금출처: 대출 연동</option>
+                        <!-- 💡 자금 출처 메뉴 UI 개선 -->
+                        <div class="filter-sort-row" style="margin-bottom:12px;">
+                            <select id="detailFundSource" onchange="window.toggleFundLoan(this.value, 'detailFundLoanWrap')" style="flex:1; border:1px solid var(--primary); background:var(--surface); color:var(--text); font-weight:600; padding:10px 12px; border-radius:10px; outline:none;">
+                                <option value="현금">💰 자금출처: 현금</option>
+                                <option value="대출">💰 자금출처: 대출 연동</option>
                             </select>
-                            <div id="detailFundLoanWrap" style="display:none; flex:1;">
-                                <select id="detailFundLoanId" style="width:100%; border:1px solid var(--line); background:var(--surface-sub); color:var(--text); border-radius:10px; padding:10px 12px; font-size:14px; outline:none;">
-                                    ${loanOptions}
-                                </select>
-                            </div>
+                        </div>
+                        <div id="detailFundLoanWrap" style="display:none; margin-bottom:12px;">
+                            <select id="detailFundLoanId" style="width:100%; border:1px solid var(--line); background:var(--surface); color:var(--text); border-radius:10px; padding:10px 12px; font-size:14px; outline:none;">
+                                ${loanOptions}
+                            </select>
                         </div>
                         
                         <div class="filter-sort-row" style="margin-bottom:8px;">
@@ -695,7 +696,7 @@ window.deleteLoanRecord = function(loanId, recId) {
 }
 
 window.submitDetailAdd = function(code) {
-    let fundSource = document.getElementById('detailFundSource').value;
+    let fundSource = document.getElementById('detailFundSource') ? document.getElementById('detailFundSource').value : '현금';
     let fundLoanId = document.getElementById('detailFundLoanId') ? document.getElementById('detailFundLoanId').value : null;
 
     let dateInput = document.getElementById('detailAddDate');
@@ -878,7 +879,7 @@ window.closeModal = function() {
 }
 
 window.submitAdd = function() {
-    let fundSource = document.getElementById('addFundSource').value;
+    let fundSource = document.getElementById('addFundSource') ? document.getElementById('addFundSource').value : '현금';
     let fundLoanId = document.getElementById('addFundLoanId') ? document.getElementById('addFundLoanId').value : null;
 
     let date = document.getElementById('addDate').value;
