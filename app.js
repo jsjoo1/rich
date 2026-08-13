@@ -25,14 +25,15 @@ function isTxOverseas(tx) {
     return false;
 }
 
+// ⚠️ 여기에 본인의 구글 웹앱 URL을 유지하세요!
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbybtTcU_U83nQwiSjOriBk02wJcBdJ98Pmb-rfOQ1rsW4MvGR_BwwDnxBhKjBshr3kzRA/exec"; 
 
 function num(n) { 
-    if (isNaN(n) || !isFinite(n)) return "0";
+    if(isNaN(n) || !isFinite(n)) return "0";
     return Math.round(n).toLocaleString('ko-KR'); 
 }
 function usd(n) { 
-    if (isNaN(n) || !isFinite(n)) return "$0.00";
+    if(isNaN(n) || !isFinite(n)) return "$0.00";
     return '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); 
 }
 function getColorClass(val) { if (val > 0) return 'c-up'; if (val < 0) return 'c-down'; return 'c-even'; }
@@ -43,23 +44,45 @@ async function fetchHistoricalRate(dateStr) {
 }
 
 async function updatePricesInBackground() {
-    // 💡 공백 제거(.trim()) 및 비주식 항목 필터링 추가
-    let uniqueTickers = [...new Set(transactions.map(t => {
-        let key = (t.code || t.name || '').trim();
-        return key;
-    }).filter(c => c && c !== '현금' && c !== '달러' && !c.toLowerCase().includes('krw')))];
+    // 💡 1. 서버 폭파 주범인 코인, 현금, 분배금 항목들을 API 요청에서 완벽히 제외합니다.
+    let validTxs = transactions.filter(t => {
+        if (!t.type && !t.name) return false;
+        let type = (t.type || '').toLowerCase();
+        let name = (t.name || '').toLowerCase();
+        if (type.includes('코인') || name.includes('krw') || name.includes('현금') || name.includes('달러')) return false;
+        if (type.includes('손익') || type.includes('분배') || type.includes('배당')) return false;
+        return true;
+    });
+
+    let uniqueTickers = [...new Set(validTxs.map(t => (t.code || t.name).trim()).filter(c => c))];
     
-    let ratePromise = fetch('https://api.frankfurter.app/latest?from=USD&to=KRW').then(res => res.json()).then(data => { if (data && data.rates && data.rates.KRW) currentUsdKrw = data.rates.KRW; }).catch(e => console.log("환율 로드 실패"));
+    let ratePromise = fetch('https://api.frankfurter.app/latest?from=USD&to=KRW')
+        .then(res => res.json())
+        .then(data => { if (data && data.rates && data.rates.KRW) currentUsdKrw = data.rates.KRW; })
+        .catch(e => console.log("환율 로드 실패"));
+
     let pricePromise = Promise.resolve();
-    
     if (GAS_API_URL && GAS_API_URL.startsWith("http") && uniqueTickers.length > 0) {
-        // 💡 특수문자 처리를 위한 URL 인코딩 추가
         let tickersQuery = encodeURIComponent(uniqueTickers.join(','));
         pricePromise = fetch(GAS_API_URL + "?tickers=" + tickersQuery)
-            .then(res => res.json())
-            .then(data => { if (data && !data.error) currentPrices = data; })
-            .catch(e => console.log("실시간 주가 로드 실패"));
+            .then(res => {
+                if(!res.ok) throw new Error("Server HTTP Error: " + res.status);
+                return res.json();
+            })
+            .then(data => { 
+                if (data && !data.error) {
+                    currentPrices = data.result || data.data || data; 
+                } else {
+                    console.error("서버에서 에러를 반환했습니다:", data.error);
+                }
+            })
+            .catch(e => {
+                console.error("실시간 주가 로드 실패:", e);
+                // 서버 연결 실패 시 사용자에게 직관적으로 알려줍니다.
+                showToast("⚠️ 실시간 주가 서버 연결 실패 (웹앱 권한을 '모든 사용자'로 확인하세요)");
+            });
     }
+
     await Promise.all([ratePromise, pricePromise]);
     render();
 }
@@ -75,11 +98,7 @@ async function initApp() {
     
     await updatePricesInBackground();
     
-    if (!loaded) { 
-        loaded = true; 
-        clearTimeout(timeout);
-        render(); 
-    }
+    if (!loaded) { loaded = true; clearTimeout(timeout); render(); }
     setInterval(updatePricesInBackground, 5000);
 }
 
@@ -90,7 +109,6 @@ function render() {
     document.querySelectorAll('input, select').forEach(el => { if(el.id && el.type !== 'file') tempInputs[el.id] = el.value; });
 
     let scrollY = window.scrollY;
-    // 💡 괄호 오타 완벽 수정됨
     let sheetScroll = document.getElementById('modalSheet') ? document.getElementById('modalSheet').scrollTop : 0;
     let loanListScroll = document.getElementById('loanListScroll') ? document.getElementById('loanListScroll').scrollTop : 0;
 
@@ -109,7 +127,11 @@ function render() {
         let amountKRW = isOverseas ? (tx.quantity * tx.price * tx.exchangeRate) : (tx.quantity * tx.price);
         
         let tickerKey = (tx.code || tx.name).trim();
-        let curPriceRaw = currentPrices[tickerKey] || tx.price;
+        let shortCode = tickerKey.replace('KRX:', '').replace('KOSDAQ:', '');
+        
+        // 💡 2. 구글 서버가 응답 키를 다르게 주더라도 무조건 매칭되도록 3중 안전장치 적용
+        let curPriceRaw = currentPrices[tickerKey] || currentPrices[shortCode] || currentPrices[tx.name] || tx.price;
+        
         let curAmountKRW = isOverseas ? (tx.quantity * curPriceRaw * currentUsdKrw) : (tx.quantity * curPriceRaw);
 
         if(!portfolio[tx.name]) {
@@ -194,7 +216,7 @@ function render() {
             let p = portfolio[name];
             let avgPriceOriginal = p.totalAmountOriginal / p.quantity;
             let displayAvgPrice = p.isOverseas ? usd(avgPriceOriginal) : num(avgPriceOriginal);
-            let curPriceRaw = currentPrices[p.tickerKey] || avgPriceOriginal;
+            let curPriceRaw = currentPrices[p.tickerKey] || currentPrices[p.tickerKey.replace('KRX:','').replace('KOSDAQ:','')] || avgPriceOriginal;
             let displayCurPrice = p.isOverseas ? usd(curPriceRaw) : num(curPriceRaw);
             let stockProfitKRW = p.currentValueKRW - p.totalAmountKRW;
             let stockReturnRate = p.totalAmountKRW > 0 ? (stockProfitKRW / p.totalAmountKRW) * 100 : 0;
@@ -271,7 +293,7 @@ function render() {
                 let amtStr = isRepay ? num(rec.amount) : '+' + num(rec.amount);
                 let color = isRepay ? 'var(--primary)' : 'var(--danger)';
 
-                return `<div style="display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.02);">
+                return `<div style="display:flex; justify-content:space-between; align-items:center; padding: 6px 0; border-bottom:1px solid rgba(255,255,255,0.02); font-size:13px;">
                             <span style="color:var(--text-soft);">${rec.date}</span>
                             <div>
                                 <span style="color:${color}; font-weight:600; margin-right:8px;">${amtStr}원</span>
@@ -342,7 +364,7 @@ function render() {
         `;
     } else if (modal === 'detail' && selectedStock) {
         let pInfo = portfolio[selectedStock] || { isOverseas: false, currentValueKRW: 0, tickerKey: '', code: '' };
-        let curP = currentPrices[pInfo.tickerKey] ? currentPrices[pInfo.tickerKey] : null;
+        let curP = currentPrices[pInfo.tickerKey] || currentPrices[pInfo.tickerKey.replace('KRX:','').replace('KOSDAQ:','')] || null;
         let stockTxs = transactions.filter(tx => tx.name === selectedStock).sort((a,b) => new Date(b.date) - new Date(a.date));
         
         let listHtml = stockTxs.map(tx => {
@@ -420,7 +442,6 @@ function render() {
     let fab = document.getElementById('fabAdd');
     if(fab) fab.onclick = () => { selectedStock = null; modal = 'add'; render(); };
     
-    // 모달창 닫기 이벤트(배경 클릭)
     let modals = ['ovAdd', 'ovDetail', 'ovLoan', 'ovData'];
     modals.forEach(id => {
         let m = document.getElementById(id);
@@ -445,7 +466,7 @@ function showToast(msg) {
   if (!t) return;
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 2200);
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
 }
 
 window.downloadTemplate = function() {
@@ -494,7 +515,8 @@ window.handleFileUpload = function(e) {
                 transactions = [...savedTxs];
                 localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
                 window.closeModal();
-                showToast('데이터가 적용되었습니다.');
+                showToast('데이터가 적용되었습니다. 페이지를 새로고침합니다.');
+                setTimeout(() => location.reload(), 1500);
             }
         } catch (err) { alert('파일 형식이 올바르지 않습니다.'); }
         document.getElementById('fileUpload').value = '';
