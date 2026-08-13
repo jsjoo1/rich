@@ -25,7 +25,7 @@ function isTxOverseas(tx) {
     return false;
 }
 
-// ⚠️ 여기에 본인의 구글 웹앱 URL을 유지하세요!
+// ⚠️ James 님의 구글 웹앱 URL이 그대로 유지되어 있습니다.
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbybtTcU_U83nQwiSjOriBk02wJcBdJ98Pmb-rfOQ1rsW4MvGR_BwwDnxBhKjBshr3kzRA/exec"; 
 
 function num(n) { 
@@ -44,17 +44,16 @@ async function fetchHistoricalRate(dateStr) {
 }
 
 async function updatePricesInBackground() {
-    // 💡 1. 서버 폭파 주범인 코인, 현금, 분배금 항목들을 API 요청에서 완벽히 제외합니다.
-    let validTxs = transactions.filter(t => {
-        if (!t.type && !t.name) return false;
+    // 💡 1. 핵심 해결 로직: 현금, 달러, 코인, 분배금 등 주식이 아닌 데이터는 구글 API 요청에서 제외!
+    let uniqueTickers = [...new Set(transactions.map(t => {
+        let key = (t.code || t.name || '').trim();
         let type = (t.type || '').toLowerCase();
-        let name = (t.name || '').toLowerCase();
-        if (type.includes('코인') || name.includes('krw') || name.includes('현금') || name.includes('달러')) return false;
-        if (type.includes('손익') || type.includes('분배') || type.includes('배당')) return false;
-        return true;
-    });
-
-    let uniqueTickers = [...new Set(validTxs.map(t => (t.code || t.name).trim()).filter(c => c))];
+        if (key.includes('현금') || key.includes('달러') || key.toLowerCase().includes('krw') || 
+            type.includes('코인') || type.includes('손익') || type.includes('배당') || type.includes('분배')) {
+            return null;
+        }
+        return key;
+    }).filter(c => c))];
     
     let ratePromise = fetch('https://api.frankfurter.app/latest?from=USD&to=KRW')
         .then(res => res.json())
@@ -63,24 +62,15 @@ async function updatePricesInBackground() {
 
     let pricePromise = Promise.resolve();
     if (GAS_API_URL && GAS_API_URL.startsWith("http") && uniqueTickers.length > 0) {
-        let tickersQuery = encodeURIComponent(uniqueTickers.join(','));
-        pricePromise = fetch(GAS_API_URL + "?tickers=" + tickersQuery)
-            .then(res => {
-                if(!res.ok) throw new Error("Server HTTP Error: " + res.status);
-                return res.json();
-            })
+        // 💡 2. 쉼표 인코딩 없이 순수 문자열로 전송하여 구글 서버 파싱 에러 원천 차단
+        pricePromise = fetch(GAS_API_URL + "?tickers=" + uniqueTickers.join(','))
+            .then(res => res.json())
             .then(data => { 
                 if (data && !data.error) {
                     currentPrices = data.result || data.data || data; 
-                } else {
-                    console.error("서버에서 에러를 반환했습니다:", data.error);
                 }
             })
-            .catch(e => {
-                console.error("실시간 주가 로드 실패:", e);
-                // 서버 연결 실패 시 사용자에게 직관적으로 알려줍니다.
-                showToast("⚠️ 실시간 주가 서버 연결 실패 (웹앱 권한을 '모든 사용자'로 확인하세요)");
-            });
+            .catch(e => console.log("실시간 주가 로드 실패"));
     }
 
     await Promise.all([ratePromise, pricePromise]);
@@ -94,7 +84,7 @@ async function initApp() {
     </div>`;
 
     let loaded = false;
-    let timeout = setTimeout(() => { if (!loaded) { loaded = true; render(); } }, 10000);
+    let timeout = setTimeout(() => { if (!loaded) { loaded = true; render(); } }, 8000);
     
     await updatePricesInBackground();
     
@@ -129,8 +119,8 @@ function render() {
         let tickerKey = (tx.code || tx.name).trim();
         let shortCode = tickerKey.replace('KRX:', '').replace('KOSDAQ:', '');
         
-        // 💡 2. 구글 서버가 응답 키를 다르게 주더라도 무조건 매칭되도록 3중 안전장치 적용
-        let curPriceRaw = currentPrices[tickerKey] || currentPrices[shortCode] || currentPrices[tx.name] || tx.price;
+        // 💡 3. 구글 응답값이 KRX:005930 이든 005930 이든 무조건 가격을 매칭하도록 안전망 적용
+        let curPriceRaw = currentPrices[tickerKey] || currentPrices[shortCode] || currentPrices[tx.name.trim()] || tx.price;
         
         let curAmountKRW = isOverseas ? (tx.quantity * curPriceRaw * currentUsdKrw) : (tx.quantity * curPriceRaw);
 
@@ -216,8 +206,11 @@ function render() {
             let p = portfolio[name];
             let avgPriceOriginal = p.totalAmountOriginal / p.quantity;
             let displayAvgPrice = p.isOverseas ? usd(avgPriceOriginal) : num(avgPriceOriginal);
+            
+            // 실시간 가격 적용
             let curPriceRaw = currentPrices[p.tickerKey] || currentPrices[p.tickerKey.replace('KRX:','').replace('KOSDAQ:','')] || avgPriceOriginal;
             let displayCurPrice = p.isOverseas ? usd(curPriceRaw) : num(curPriceRaw);
+            
             let stockProfitKRW = p.currentValueKRW - p.totalAmountKRW;
             let stockReturnRate = p.totalAmountKRW > 0 ? (stockProfitKRW / p.totalAmountKRW) * 100 : 0;
             let pColor = getColorClass(stockProfitKRW);
