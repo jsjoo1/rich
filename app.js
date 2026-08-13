@@ -25,7 +25,7 @@ function isTxOverseas(tx) {
     return false;
 }
 
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx9u7YR3LDC_8ELh3hBiKOu7Grq2vv4IB7tZU3MfMg-bXcoIxnQpAXcwdMJ_qVoxEPjHA/exec"; 
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycby8YGlHN7hktjxzXicZTDoAV_YkPRJOyDVm3PbA0AncRxWBnWK6uKjCUrGBwMYNmqYsZg/exec"; 
 
 function num(n) { 
     if(isNaN(n) || !isFinite(n)) return "0";
