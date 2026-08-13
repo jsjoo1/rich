@@ -25,7 +25,7 @@ function isTxOverseas(tx) {
     return false;
 }
 
-// ⚠️ 여기를 본인의 URL로 바꾸세요!
+// ⚠️ 여기에 본인의 구글 웹앱 URL을 정확히 입력하세요!
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbybtTcU_U83nQwiSjOriBk02wJcBdJ98Pmb-rfOQ1rsW4MvGR_BwwDnxBhKjBshr3kzRA/exec"; 
 
 function num(n) { return Math.round(n).toLocaleString('ko-KR'); }
@@ -50,8 +50,14 @@ async function updatePricesInBackground() {
 
 async function initApp() {
     const app = document.getElementById('app');
-    app.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; color:var(--text-soft);">실시간 데이터를 불러오는 중입니다...</div>`;
+    app.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; gap:16px;">
+        <div style="font-size:16px; font-weight:700; color:var(--text-soft);">실시간 주가 정보를 불러오는 중입니다...</div>
+    </div>`;
+
+    let loaded = false;
+    setTimeout(() => { if (!loaded) { loaded = true; render(); } }, 10000);
     await updatePricesInBackground();
+    if (!loaded) { loaded = true; render(); }
     setInterval(updatePricesInBackground, 5000);
 }
 
@@ -60,10 +66,9 @@ function render() {
     if (document.activeElement && document.activeElement.id) { focusedElementId = document.activeElement.id; try { cursorPosition = document.activeElement.selectionStart || 0; } catch(e){} }
     let tempInputs = {};
     document.querySelectorAll('input, select').forEach(el => { if(el.id && el.type !== 'file') tempInputs[el.id] = el.value; });
-    let currentWindowScrollY = window.scrollY;
-    let modalSheetScroll = 0; let loanListScroll = 0;
-    let sheetEl = document.getElementById('modalSheet'); if (sheetEl) modalSheetScroll = sheetEl.scrollTop;
-    let loanListEl = document.getElementById('loanListScroll'); if (loanListEl) loanListScroll = loanListEl.scrollTop;
+
+    let scrollY = window.scrollY;
+    let sheetScroll = document.getElementById('modalSheet') ? document.getElementById('modalSheet').scrollTop : 0;
 
     const app = document.getElementById('app'); const today = new Date();
     let totalInvested = 0; let accruedInterest = 0; let totalCurrentValue = 0; let portfolio = {};
@@ -72,55 +77,48 @@ function render() {
     transactions.forEach(tx => {
         let isOverseas = isTxOverseas(tx);
         let amountKRW = isOverseas ? (tx.quantity * tx.price * tx.exchangeRate) : (tx.quantity * tx.price);
-        let tickerKey = tx.code || tx.name;
-        let curPrice = currentPrices[tickerKey] || tx.price;
+        let curPrice = currentPrices[tx.code || tx.name] || tx.price;
         let curAmountKRW = isOverseas ? (tx.quantity * curPrice * currentUsdKrw) : (tx.quantity * curPrice);
-        if(!portfolio[tx.name]) portfolio[tx.name] = { type: tx.type, tickerKey: tickerKey, code: tx.code, quantity: 0, totalAmountKRW: 0, totalAmountOriginal: 0, currentValueKRW: 0, isOverseas: isOverseas };
+        if(!portfolio[tx.name]) portfolio[tx.name] = { type: tx.type, tickerKey: tx.code || tx.name, code: tx.code, quantity: 0, totalAmountKRW: 0, totalAmountOriginal: 0, currentValueKRW: 0, isOverseas: isOverseas };
         portfolio[tx.name].quantity += tx.quantity; portfolio[tx.name].totalAmountOriginal += (tx.quantity * tx.price); portfolio[tx.name].totalAmountKRW += amountKRW; portfolio[tx.name].currentValueKRW += curAmountKRW;
         totalInvested += amountKRW; totalCurrentValue += curAmountKRW;
     });
 
-    let marketProfit = totalCurrentValue - totalInvested; let netProfit = marketProfit - accruedInterest; let realReturnRate = totalInvested > 0 ? (netProfit / totalInvested) * 100 : 0;
-    let activeStocks = Object.keys(portfolio).filter(name => portfolio[name].quantity > 0.0001 && name.toLowerCase().includes(searchText.toLowerCase())).sort((a,b) => {
-        if (sortBy === 'name_asc') return a.localeCompare(b);
-        if (sortBy === 'invested_desc') return portfolio[b].totalAmountKRW - portfolio[a].totalAmountKRW;
-        return portfolio[b].currentValueKRW - portfolio[a].currentValueKRW;
-    });
-
+    let marketProfit = totalCurrentValue - totalInvested; let netProfit = marketProfit - accruedInterest;
     let html = `
         <div class="kw-summary">
-            <div class="kw-summary-title">총 실질손익(원) <span style="font-size:11px; color:var(--text-soft); padding:2px 6px; background:var(--surface-sub); border-radius:4px;">*대출이자 차감</span></div>
-            <div class="kw-summary-main ${getColorClass(netProfit)}">
-                <div class="val">${getSign(netProfit)}${num(netProfit)}</div>
-                <div class="pct">${getSign(netProfit)}${realReturnRate.toFixed(2)}%</div>
-            </div>
+            <div class="kw-summary-title">총 실질손익(원)</div>
+            <div class="kw-summary-main ${getColorClass(netProfit)}"><div class="val">${getSign(netProfit)}${num(netProfit)}</div></div>
             <div class="kw-summary-grid">
-                <div class="kw-sg-item"><span class="lbl">매입금액</span><span class="val">${num(totalInvested)}</span></div>
-                <div class="kw-sg-item"><span class="lbl">평가금액</span><span class="val">${num(totalCurrentValue)}</span></div>
-                <div class="kw-sg-item" style="cursor:pointer;" onclick="openLoanModal()"><span class="lbl" style="color:var(--primary); font-weight:700;">이자관리 ⚙️</span><span class="val" style="color:var(--text-soft);">- ${num(accruedInterest)}</span></div>
+                <div class="kw-sg-item"><span class="lbl">매입</span><span class="val">${num(totalInvested)}</span></div>
+                <div class="kw-sg-item"><span class="lbl">평가</span><span class="val">${num(totalCurrentValue)}</span></div>
+                <div class="kw-sg-item" style="cursor:pointer;" onclick="openLoanModal()"><span class="lbl" style="color:var(--primary);">이자관리 ⚙️</span><span class="val">- ${num(accruedInterest)}</span></div>
             </div>
         </div>
-        <div class="page" style="padding:0;">
+        <div class="page">
             <div class="portfolio-tools">
-                <div class="view-toggles"><button class="${viewMode === 'list' ? 'active' : ''}" onclick="window.setViewMode('list')">일반 잔고</button><button class="${viewMode === 'chart' ? 'active' : ''}" onclick="window.setViewMode('chart')">파이 차트</button></div>
+                <div class="view-toggles"><button class="${viewMode === 'list' ? 'active' : ''}" onclick="window.setViewMode('list')">일반</button><button class="${viewMode === 'chart' ? 'active' : ''}" onclick="window.setViewMode('chart')">차트</button></div>
                 <div class="filter-sort-row" style="display:flex; gap:8px;">
                     <button onclick="window.openDataModal()" style="background:var(--surface-sub); border:none; color:var(--text); padding:0 12px; border-radius:8px; font-size:12px; cursor:pointer;">💾 데이터 관리</button>
                     <input type="text" id="searchInput" placeholder="검색..." value="${searchText}" oninput="window.setSearchText(this.value)" style="flex:1;">
-                    <select id="sortSelect" onchange="window.setSortBy(this.value)"><option value="invested_desc">매입금액순</option><option value="value_desc">평가금액순</option></select>
                 </div>
             </div>
-            ${viewMode === 'list' ? '<div class="kw-table">' + activeStocks.map(name => `
+            ${viewMode === 'list' ? '<div class="kw-table">' + Object.keys(portfolio).map(name => `
                 <div class="kw-row" onclick="openStockDetail('${name}')">
                     <div class="col-name">${name}<span class="ticker">${portfolio[name].quantity.toLocaleString()}주</span></div>
-                    <div class="col">${usd(currentPrices[portfolio[name].tickerKey] || 0)}</div>
-                    <div class="col">${getSign(portfolio[name].currentValueKRW - portfolio[name].totalAmountKRW)}${num(portfolio[name].currentValueKRW - portfolio[name].totalAmountKRW)}</div>
+                    <div class="col">${num(currentPrices[portfolio[name].tickerKey] || portfolio[name].totalAmountOriginal/portfolio[name].quantity)}</div>
+                    <div class="col ${getColorClass(portfolio[name].currentValueKRW - portfolio[name].totalAmountKRW)}">${num(portfolio[name].currentValueKRW - portfolio[name].totalAmountKRW)}</div>
                 </div>`).join('') + '</div>' : '<div class="chart-container"><canvas id="portfolioChart"></canvas></div>'}
         </div>
         <button class="fab" id="fabAdd">+</button>
     `;
-
-    // (모달 렌더링 및 이벤트 바인딩 생략 - 전체 구조상 이전 버전의 modal 로직을 그대로 사용하세요)
     app.innerHTML = html;
-    // ... 입력값 복구 및 스크롤 유지 코드 동일 적용 ...
+    Object.keys(tempInputs).forEach(id => { let el = document.getElementById(id); if(el) el.value = tempInputs[id]; });
+    if (focusedElementId) { let el = document.getElementById(focusedElementId); if (el) { el.focus(); try { el.setSelectionRange(cursorPosition, cursorPosition); } catch(e){} } }
+    window.scrollTo(0, scrollY);
+    if (document.getElementById('modalSheet')) document.getElementById('modalSheet').scrollTop = sheetScroll;
+    
+    // (모달, 서브밋 함수 등 이전 답변의 로직 추가)
 }
-// ... (나머지 로직 동일)
+
+document.addEventListener('DOMContentLoaded', () => initApp());
