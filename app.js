@@ -25,6 +25,7 @@ transactions.forEach(tx => {
 });
 
 function isTxOverseas(tx) {
+    if (!tx) return false;
     if (tx.exchangeRate > 100) return true; 
     if (tx.type && tx.type.includes('해외')) return true; 
     if (tx.name === '달러') return true; 
@@ -287,7 +288,7 @@ function render() {
                             <option value="주식(해외)" ${pType === '주식(해외)' ? 'selected' : ''}>주식(해외)</option>
                         </select>
                     </div>
-                    <div class="field"><label>종목명</label><input type="text" id="addName" placeholder="예: 삼성전자" value="${pName}"></div>
+                    <div class="field"><label>종목명 (입력 시 티커 자동완성)</label><input type="text" id="addName" placeholder="예: 삼성전자" value="${pName}"></div>
                     <div class="field"><label>종목코드 / 티커 (API 연동용)</label><input type="text" id="addCode" placeholder="예: KRX:005930 또는 AAPL" value="${pCode}"></div>
                     <div class="field"><label>수량 (매도 시 -음수 입력)</label><input type="number" step="0.0001" id="addQty" placeholder="예: 매수 10 / 매도 -5"></div>
                     <div class="field"><label>거래 단가</label><input type="number" step="0.01" id="addPrice" placeholder="0"></div>
@@ -495,20 +496,21 @@ function bindModalEvents() {
     const addName = document.getElementById('addName');
     const addCode = document.getElementById('addCode');
 
+    // 💡 버그 수정: 종목명이 변경될 때 일치하는 기억 값이 없으면 티커를 즉시 초기화하도록 조건 강화
     addName.addEventListener('input', function() {
         let n = this.value.trim();
         
-        // 1. 종목명을 다 지우면 코드도 초기화
         if (n === '') {
             addCode.value = ''; 
         } 
-        // 2. 기존 보유 종목 데이터에 있으면 불러오기
         else if (tickerMap[n]) {
             addCode.value = tickerMap[n]; 
         } 
-        // 3. 해외 주식이고 영문으로 입력 중이면 티커일 확률이 높으므로 대문자로 자동 입력
         else if (/^[a-zA-Z0-9]+$/.test(n) && addType.value.includes('해외')) {
             addCode.value = n.toUpperCase();
+        }
+        else {
+            addCode.value = ''; // 기억된 종목이 아니거나 지우는 중이면 즉시 비움
         }
     });
 
