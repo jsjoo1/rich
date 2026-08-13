@@ -114,7 +114,6 @@ async function initApp() {
 }
 
 function render() {
-    // 💡 화면 갱신 전, 입력값 및 '스크롤 위치' 기억 로직
     let focusedElementId = null;
     let cursorPosition = 0;
     if (document.activeElement && document.activeElement.id) {
@@ -127,7 +126,6 @@ function render() {
         if(el.id) tempInputs[el.id] = el.value;
     });
 
-    // 💡 중요: 메인 화면과 모달창의 스크롤 위치 기록
     let currentWindowScrollY = window.scrollY;
     let modalSheetScroll = 0;
     let loanListScroll = 0;
@@ -137,7 +135,6 @@ function render() {
 
     let loanListEl = document.getElementById('loanListScroll');
     if (loanListEl) loanListScroll = loanListEl.scrollTop;
-
 
     const app = document.getElementById('app');
     const today = new Date();
@@ -317,7 +314,11 @@ function render() {
     html += `</div>`;
     html += `<button class="fab" id="fabAdd">+</button>`;
 
-    // 모달창 렌더링 (스크롤 유지를 위한 id="modalSheet" 추가 적용)
+    // 대출 목록 옵션 HTML 생성
+    let loanOptions = loans.length > 0 
+        ? loans.map(l => `<option value="${l.id}">${l.name}</option>`).join('')
+        : `<option value="" disabled selected>등록된 대출이 없습니다</option>`;
+
     if(modal === 'add') {
         let pName = selectedStock || '';
         let pType = '국내주식';
@@ -331,6 +332,20 @@ function render() {
             <div class="overlay" id="ovAdd">
                 <div class="sheet" id="modalSheet">
                     <div class="sheet-title">새 종목 추가<button class="close" onclick="closeModal()">✕</button></div>
+                    
+                    <div class="field"><label>자금 출처</label>
+                        <select id="addFundSource" onchange="window.toggleFundLoan(this.value, 'addFundLoanWrap')">
+                            <option value="현금">현금 (내 돈으로 매수)</option>
+                            <option value="대출">대출 연동 (매수 시 자동으로 대출금 증가)</option>
+                        </select>
+                    </div>
+                    <div class="field" id="addFundLoanWrap" style="display:none; margin-top:-6px;">
+                        <label>연동할 대출 선택</label>
+                        <select id="addFundLoanId">${loanOptions}</select>
+                    </div>
+                    
+                    <hr style="border:0; border-top:1px solid rgba(255,255,255,0.05); margin: 20px 0;">
+
                     <div class="field"><label>날짜</label><input type="date" id="addDate" value="${new Date().toISOString().split('T')[0]}"></div>
                     <div class="field"><label>구분</label>
                         <select id="addType">
@@ -388,7 +403,23 @@ function render() {
                     </div>
                     
                     <div style="background: var(--surface-sub); padding: 16px 16px 4px; border-radius: 16px; margin-bottom: 24px;">
-                        <div style="font-size: 13px; font-weight: 800; margin-bottom: 12px; color: var(--text);">📝 이 종목 신규 기록 추가</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <span style="font-size: 13px; font-weight: 800; color: var(--text);">📝 이 종목 신규 기록 추가</span>
+                        </div>
+
+                        <!-- 💡 자금 출처 선택 추가 -->
+                        <div class="filter-sort-row" style="margin-bottom:8px;">
+                            <select id="detailFundSource" onchange="window.toggleFundLoan(this.value, 'detailFundLoanWrap')" style="flex:1;">
+                                <option value="현금">자금출처: 현금</option>
+                                <option value="대출">자금출처: 대출 연동</option>
+                            </select>
+                            <div id="detailFundLoanWrap" style="display:none; flex:1;">
+                                <select id="detailFundLoanId" style="width:100%; border:1px solid var(--line); background:var(--surface-sub); color:var(--text); border-radius:10px; padding:10px 12px; font-size:14px; outline:none;">
+                                    ${loanOptions}
+                                </select>
+                            </div>
+                        </div>
+                        
                         <div class="filter-sort-row" style="margin-bottom:8px;">
                             <input type="date" id="detailAddDate" value="${new Date().toISOString().split('T')[0]}" style="flex:1;">
                             <input type="number" step="0.0001" id="detailAddQty" placeholder="수량 (-매도)" style="flex:1;">
@@ -410,7 +441,6 @@ function render() {
             </div>
         `;
     } 
-    // 💡 대출 관리 모달창
     else if (modal === 'loan') {
         let loanListHtml = loans.map((l, idx) => {
             let currentPrincipal = 0;
@@ -498,10 +528,14 @@ function render() {
 
     app.innerHTML = html;
 
-    // 💡 화면 렌더링 후, 저장해둔 사용자 입력값 복구
     Object.keys(tempInputs).forEach(id => {
         let el = document.getElementById(id);
-        if(el && tempInputs[id] !== undefined) el.value = tempInputs[id];
+        if(el && tempInputs[id] !== undefined) {
+            el.value = tempInputs[id];
+            // 💡 저장된 값에 따라 화면 동적 UI 처리
+            if (id === 'addFundSource') window.toggleFundLoan(el.value, 'addFundLoanWrap');
+            if (id === 'detailFundSource') window.toggleFundLoan(el.value, 'detailFundLoanWrap');
+        }
     });
 
     if (focusedElementId) {
@@ -512,7 +546,6 @@ function render() {
         }
     }
 
-    // 💡 스크롤 위치 복구 로직 (새로고침 시 화면 안 튕김)
     window.scrollTo(0, currentWindowScrollY);
     let newSheetEl = document.getElementById('modalSheet');
     if (newSheetEl) newSheetEl.scrollTop = modalSheetScroll;
@@ -520,7 +553,6 @@ function render() {
     let newLoanListEl = document.getElementById('loanListScroll');
     if (newLoanListEl) newLoanListEl.scrollTop = loanListScroll;
     
-    // 혹시 모를 브라우저 렌더링 지연을 대비해 비동기로 한 번 더 적용
     setTimeout(() => {
         window.scrollTo(0, currentWindowScrollY);
         if (document.getElementById('modalSheet')) document.getElementById('modalSheet').scrollTop = modalSheetScroll;
@@ -560,6 +592,14 @@ window.openStockDetail = function(name) {
 window.openLoanModal = function() {
     modal = 'loan';
     render();
+}
+
+window.toggleFundLoan = function(val, wrapId) {
+    let wrap = document.getElementById(wrapId);
+    if(wrap) {
+        if (val === '대출') wrap.style.display = 'block';
+        else wrap.style.display = 'none';
+    }
 }
 
 window.submitLoanAdd = function() {
@@ -655,6 +695,9 @@ window.deleteLoanRecord = function(loanId, recId) {
 }
 
 window.submitDetailAdd = function(code) {
+    let fundSource = document.getElementById('detailFundSource').value;
+    let fundLoanId = document.getElementById('detailFundLoanId') ? document.getElementById('detailFundLoanId').value : null;
+
     let dateInput = document.getElementById('detailAddDate');
     let qtyInput = document.getElementById('detailAddQty');
     let priceInput = document.getElementById('detailAddPrice');
@@ -669,9 +712,15 @@ window.submitDetailAdd = function(code) {
         showToast('수량과 단가를 입력해주세요');
         return;
     }
+
+    if (fundSource === '대출' && !fundLoanId) {
+        showToast('먼저 대출 관리 메뉴에서 대출을 등록해주세요.');
+        return;
+    }
     
     let pObj = transactions.find(t => t.name === selectedStock);
     let type = pObj ? pObj.type : '국내주식';
+    let isOvs = isTxOverseas(pObj);
 
     let newTx = {
         portfolio: "수동입력",
@@ -681,18 +730,32 @@ window.submitDetailAdd = function(code) {
         code: code || '',
         quantity: qty,
         price: price,
-        exchangeRate: isTxOverseas(pObj) ? rate : 1.0
+        exchangeRate: isOvs ? rate : 1.0
     };
 
     transactions.unshift(newTx);
     savedTxs.unshift(newTx);
     localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs)); 
 
+    // 💡 대출 연동 처리 로직
+    if (fundSource === '대출') {
+        let totalAmountKRW = qty * price * (isOvs ? rate : 1.0);
+        let loan = loans.find(l => l.id === fundLoanId);
+        if (loan) {
+            loan.records.push({
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                date: date,
+                amount: totalAmountKRW // 매수(+)면 증가, 매도(-)면 감소(상환)
+            });
+            localStorage.setItem('myLoans', JSON.stringify(loans));
+        }
+    }
+
     qtyInput.value = '';
     priceInput.value = '';
 
     render(); 
-    showToast('매매 기록이 영구적으로 추가되었습니다.');
+    showToast(fundSource === '대출' ? '매매 기록 및 대출이 연동 추가되었습니다.' : '매매 기록이 영구적으로 추가되었습니다.');
     setTimeout(bindDetailRateEvent, 50);
 }
 
@@ -815,6 +878,9 @@ window.closeModal = function() {
 }
 
 window.submitAdd = function() {
+    let fundSource = document.getElementById('addFundSource').value;
+    let fundLoanId = document.getElementById('addFundLoanId') ? document.getElementById('addFundLoanId').value : null;
+
     let date = document.getElementById('addDate').value;
     let type = document.getElementById('addType').value;
     let name = document.getElementById('addName').value.trim();
@@ -825,6 +891,11 @@ window.submitAdd = function() {
 
     if(!name || !qty || !price) {
         showToast('필수 정보를 입력해주세요');
+        return;
+    }
+
+    if (fundSource === '대출' && !fundLoanId) {
+        showToast('먼저 대출 관리 메뉴에서 대출을 등록해주세요.');
         return;
     }
 
@@ -847,8 +918,22 @@ window.submitAdd = function() {
     savedTxs.unshift(newTx);
     localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs)); 
 
+    // 💡 대출 연동 로직
+    if (fundSource === '대출') {
+        let totalAmountKRW = qty * price * (isOvs ? rate : 1.0);
+        let loan = loans.find(l => l.id === fundLoanId);
+        if (loan) {
+            loan.records.push({
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                date: date,
+                amount: totalAmountKRW
+            });
+            localStorage.setItem('myLoans', JSON.stringify(loans));
+        }
+    }
+
     closeModal();
-    showToast('새로운 종목이 추가되었습니다.');
+    showToast(fundSource === '대출' ? '새 종목 및 대출 연동이 완료되었습니다.' : '새로운 종목이 추가되었습니다.');
 }
 
 function showToast(msg) {
