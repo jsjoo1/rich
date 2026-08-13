@@ -25,8 +25,7 @@ function isTxOverseas(tx) {
     return false;
 }
 
-// ⚠️ James 님의 구글 웹앱 URL이 그대로 유지되어 있습니다.
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbybtTcU_U83nQwiSjOriBk02wJcBdJ98Pmb-rfOQ1rsW4MvGR_BwwDnxBhKjBshr3kzRA/exec"; 
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx9u7YR3LDC_8ELh3hBiKOu7Grq2vv4IB7tZU3MfMg-bXcoIxnQpAXcwdMJ_qVoxEPjHA/exec"; 
 
 function num(n) { 
     if(isNaN(n) || !isFinite(n)) return "0";
