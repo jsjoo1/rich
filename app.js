@@ -59,34 +59,29 @@ async function updatePricesInBackground() {
         .then(data => { if (data && data.rates && data.rates.KRW) currentUsdKrw = data.rates.KRW; })
         .catch(e => console.log("환율 로드 실패"));
 
-    let pricePromises = [];
+    let pricePromise = Promise.resolve();
     
     if (GAS_API_URL && GAS_API_URL.startsWith("http") && uniqueTickers.length > 0) {
-        // 💡 핵심: 15개 단위로 쪼개어 병렬로 요청 (타임아웃 방지)
-        const CHUNK_SIZE = 15;
-        for (let i = 0; i < uniqueTickers.length; i += CHUNK_SIZE) {
-            let chunk = uniqueTickers.slice(i, i + CHUNK_SIZE);
-            let tickersQuery = encodeURIComponent(chunk.join(','));
-            
-            let p = fetch(GAS_API_URL + "?tickers=" + tickersQuery)
-                .then(res => {
-                    if(!res.ok) throw new Error("Server HTTP Error: " + res.status);
-                    return res.json();
-                })
-                .then(data => { 
-                    if (data && !data.error) {
-                        let resultData = data.result || data.data || data;
-                        Object.assign(currentPrices, resultData); // 응답받은 데이터를 병합
-                    }
-                })
-                .catch(e => {
-                    console.error("실시간 주가 로드 실패:", e);
-                });
-            pricePromises.push(p);
-        }
+        // 💡 핵심: 쪼개지 않고 단 1번의 요청으로 모든 주가 데이터 일괄 조회 (가장 빠름)
+        let tickersQuery = encodeURIComponent(uniqueTickers.join(','));
+        
+        pricePromise = fetch(GAS_API_URL + "?tickers=" + tickersQuery)
+            .then(res => {
+                if(!res.ok) throw new Error("Server HTTP Error: " + res.status);
+                return res.json();
+            })
+            .then(data => { 
+                if (data && !data.error) {
+                    let resultData = data.result || data.data || data;
+                    Object.assign(currentPrices, resultData); // 응답받은 데이터를 병합
+                }
+            })
+            .catch(e => {
+                console.error("실시간 주가 로드 실패:", e);
+            });
     }
 
-    await Promise.all([ratePromise, ...pricePromises]);
+    await Promise.all([ratePromise, pricePromise]);
     render();
 }
 
@@ -102,7 +97,9 @@ async function initApp() {
     await updatePricesInBackground();
     
     if (!loaded) { loaded = true; clearTimeout(timeout); render(); }
-    setInterval(updatePricesInBackground, 5000);
+    
+    // 💡 핵심: API 쿼터 초과 방지를 위해 60초 간격으로 갱신 주기 연장
+    setInterval(updatePricesInBackground, 60000);
 }
 
 function render() {
