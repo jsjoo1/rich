@@ -64,27 +64,16 @@ async function fetchHistoricalRate(dateStr) {
 
 if (typeof Chart !== 'undefined') { Chart.defaults.color = '#8f95b2'; }
 
-// 🚀 데이터 조회가 완전히 끝난 후 메인 화면을 보여주는 동기화 초기화 함수
-async function initApp() {
-    const app = document.getElementById('app');
+// 🚀 백그라운드 데이터 수집 함수 (10초마다 자동 실행됨)
+async function updatePricesInBackground() {
+    let uniqueTickers = [...new Set(transactions.map(t => t.code || t.name).filter(c => c))];
     
-    // 1. 로딩 스피너 및 대기 메시지 표시
-    app.innerHTML = `
-        <div style="display:flex; flex-direction:column; align-items:center; justify-center:center; min-height:80vh; gap:16px;">
-            <div style="font-size:16px; font-weight:700; color:var(--text-soft);">실시간 가격 정보를 불러오는 중입니다...</div>
-            <div style="font-size:12px; color:var(--text-soft); opacity:0.6;">잠시만 기다려 주세요.</div>
-        </div>
-    `;
-
-    // 2. 환율 및 주가 데이터 동시 조회 (백엔드)
     let ratePromise = fetch('https://api.frankfurter.app/latest?from=USD&to=KRW')
         .then(res => res.json())
         .then(data => { if (data && data.rates && data.rates.KRW) currentUsdKrw = data.rates.KRW; })
         .catch(e => console.log("환율 로드 실패"));
 
-    let uniqueTickers = [...new Set(transactions.map(t => t.code || t.name).filter(c => c))];
     let pricePromise = Promise.resolve();
-
     if (GAS_API_URL && GAS_API_URL.startsWith("http")) {
         pricePromise = fetch(GAS_API_URL + "?tickers=" + uniqueTickers.join(','))
             .then(res => res.json())
@@ -92,22 +81,46 @@ async function initApp() {
             .catch(e => console.log("실시간 주가 로드 실패"));
     }
 
-    // 3. 두 API 응답이 완전히 완료될 때까지 대기
     await Promise.all([ratePromise, pricePromise]);
-
-    // 4. 조회가 완전히 끝난 후에 메인 화면 렌더링
+    
+    // 데이터 수집 후 화면 조용히 리렌더링
     render(); 
 }
 
+// 🚀 앱 접속 시 최초 화면 로딩 및 초기화
+async function initApp() {
+    const app = document.getElementById('app');
+    
+    // 데이터 로드 전 깔끔한 로딩 화면 먼저 표시
+    app.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80vh; gap:16px;">
+            <div style="font-size:16px; font-weight:700; color:var(--text-soft);">실시간 가격 정보를 불러오는 중입니다...</div>
+            <div style="font-size:13px; color:var(--text-soft); opacity:0.7;">잠시만 기다려 주세요.</div>
+        </div>
+    `;
+
+    // 1. 최초 데이터 수집을 실행하고 완료될 때까지 기다림 (완료되면 메인 화면 렌더링됨)
+    await updatePricesInBackground();
+    
+    // 2. 이후 10초(10000ms)마다 백그라운드 갱신 자동 실행 (페이지 새로고침 없음!)
+    setInterval(updatePricesInBackground, 10000);
+}
+
 function render() {
+    // 💡 화면이 업데이트될 때 사용자가 입력 중이던 값과 커서 위치를 기억하는 마법의 로직
     let focusedElementId = null;
     let cursorPosition = 0;
-    if (document.activeElement) {
+    if (document.activeElement && document.activeElement.id) {
         focusedElementId = document.activeElement.id;
-        if (focusedElementId === 'searchInput') {
-            cursorPosition = document.activeElement.selectionStart;
-        }
+        try { cursorPosition = document.activeElement.selectionStart || 0; } catch(e){}
     }
+
+    let tempInputs = {};
+    ['searchInput', 'sortSelect', 'addDate', 'addType', 'addName', 'addCode', 'addQty', 'addPrice', 'addRate',
+     'detailAddDate', 'detailAddQty', 'detailAddPrice', 'detailAddRate'].forEach(id => {
+        let el = document.getElementById(id);
+        if(el) tempInputs[id] = el.value;
+    });
 
     const app = document.getElementById('app');
     
@@ -344,7 +357,7 @@ function render() {
                         <div>
                             <div style="font-size:20px;">${selectedStock}</div>
                             <div style="font-size:12px; color:var(--text-soft); font-weight:400; margin-top:4px;">
-                                실시간 주가: ${curP ? (pInfo.isOverseas ? usd(curP) : num(curP)+'원') : 'API 연동 전'}
+                                실시간 주가: <span style="font-weight:700; color:var(--text);">${curP ? (pInfo.isOverseas ? usd(curP) : num(curP)+'원') : 'API 연동 전'}</span>
                             </div>
                         </div>
                         <button class="close" onclick="closeModal()">✕</button>
@@ -376,13 +389,17 @@ function render() {
 
     app.innerHTML = html;
 
+    // 💡 저장해둔 사용자 폼 입력값 및 포커스 복구 (입력 중 화면이 리렌더링되어도 날아가지 않음)
+    Object.keys(tempInputs).forEach(id => {
+        let el = document.getElementById(id);
+        if(el && tempInputs[id] !== undefined) el.value = tempInputs[id];
+    });
+
     if (focusedElementId) {
         let el = document.getElementById(focusedElementId);
         if (el) {
             el.focus();
-            if (focusedElementId === 'searchInput') {
-                el.setSelectionRange(cursorPosition, cursorPosition);
-            }
+            try { el.setSelectionRange(cursorPosition, cursorPosition); } catch(e){}
         }
     }
 
@@ -391,11 +408,18 @@ function render() {
     }
 
     let fab = document.getElementById('fabAdd');
-    if(fab) fab.onclick = () => { selectedStock = null; modal = 'add'; render(); setTimeout(bindModalEvents, 50); };
+    if(fab) fab.onclick = () => { selectedStock = null; modal = 'add'; render(); };
     let ovAdd = document.getElementById('ovAdd');
     if(ovAdd) ovAdd.onclick = (e) => { if(e.target === ovAdd) closeModal(); };
     let ovDetail = document.getElementById('ovDetail');
     if(ovDetail) ovDetail.onclick = (e) => { if(e.target === ovDetail) closeModal(); };
+
+    // 모달이 열려있을 때만 환율 조회 이벤트 바인딩
+    if (modal === 'add') {
+        bindModalEvents();
+    } else if (modal === 'detail' && selectedStock) {
+        bindDetailRateEvent();
+    }
 }
 
 window.setViewMode = function(mode) { viewMode = mode; render(); }
@@ -406,7 +430,6 @@ window.openStockDetail = function(name) {
     selectedStock = name;
     modal = 'detail';
     render();
-    setTimeout(bindDetailRateEvent, 50);
 }
 
 window.submitDetailAdd = function(code) {
@@ -436,7 +459,6 @@ window.submitDetailAdd = function(code) {
 
     render(); 
     showToast('매매 기록이 추가되었습니다.');
-    setTimeout(bindDetailRateEvent, 50);
 }
 
 function bindDetailRateEvent() {
@@ -549,7 +571,6 @@ function bindModalEvents() {
 
     addType.addEventListener('change', checkRate);
     addDate.addEventListener('change', checkRate);
-    checkRate();
 }
 
 window.closeModal = function() {
