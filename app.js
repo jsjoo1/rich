@@ -67,7 +67,7 @@ async function initApp() {
     let uniqueTickers = [...new Set(transactions.map(t => t.code || t.name).filter(c => c))];
 
     // ▼▼▼ 여기에 구글 웹 앱 URL을 붙여넣으세요 ▼▼▼
-    const GAS_API_URL = ""; 
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbw49U0md_xKhA1c5P599LDDUnFG81OQFzuE75Y2P9pqsiPAysbLbuVfUv14m4-hwc3e8w/exec"; 
     
     if (GAS_API_URL && GAS_API_URL.startsWith("http")) {
         try {
