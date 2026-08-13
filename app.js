@@ -41,7 +41,7 @@ function getSign(val) {
 // 과거 환율 API
 async function fetchHistoricalRate(dateStr) {
     try {
-        const res = await fetch(`[https://api.frankfurter.app/$](https://api.frankfurter.app/$){dateStr}?from=USD&to=KRW`);
+        const res = await fetch(`https://api.frankfurter.app/${dateStr}?from=USD&to=KRW`);
         if (!res.ok) throw new Error('Network response was not ok');
         const data = await res.json();
         return data.rates.KRW;
@@ -57,7 +57,7 @@ async function initApp() {
     if (loadingEl) loadingEl.innerText = "실시간 현재가 및 환율 동기화 중...";
 
     try {
-        const res = await fetch('[https://api.frankfurter.app/latest?from=USD&to=KRW](https://api.frankfurter.app/latest?from=USD&to=KRW)');
+        const res = await fetch('https://api.frankfurter.app/latest?from=USD&to=KRW');
         const data = await res.json();
         if (data && data.rates && data.rates.KRW) {
             currentUsdKrw = data.rates.KRW;
@@ -66,8 +66,7 @@ async function initApp() {
 
     let uniqueTickers = [...new Set(transactions.map(t => t.code || t.name).filter(c => c))];
 
-    // ▼▼▼ 여기에 구글 웹 앱 URL을 붙여넣으세요 ▼▼▼
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbw49U0md_xKhA1c5P599LDDUnFG81OQFzuE75Y2P9pqsiPAysbLbuVfUv14m4-hwc3e8w/exec"; 
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbz1-Z_X7L8L_KxN_RzJ5uP_b-I4-x2-h57_2Q_sQ_O-lV-O_h2w9-G-C_uE2tX12F1N/exec"; 
     
     if (GAS_API_URL && GAS_API_URL.startsWith("http")) {
         try {
@@ -218,6 +217,10 @@ function render() {
             let avgPriceOriginal = p.totalAmountOriginal / p.quantity;
             let displayAvgPrice = p.isOverseas ? usd(avgPriceOriginal) : num(avgPriceOriginal);
             
+            // 현재가
+            let curPriceRaw = currentPrices[p.tickerKey] || avgPriceOriginal;
+            let displayCurPrice = p.isOverseas ? usd(curPriceRaw) : num(curPriceRaw);
+
             let stockProfitKRW = p.currentValueKRW - p.totalAmountKRW;
             let stockReturnRate = p.totalAmountKRW > 0 ? (stockProfitKRW / p.totalAmountKRW) * 100 : 0;
             let pColor = getColorClass(stockProfitKRW);
