@@ -66,7 +66,7 @@ async function initApp() {
 
     let uniqueTickers = [...new Set(transactions.map(t => t.code || t.name).filter(c => c))];
 
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbw49U0md_xKhA1c5P599LDDUnFG81OQFzuE75Y2P9pqsiPAysbLbuVfUv14m4-hwc3e8w/exec"; 
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbz1-Z_X7L8L_KxN_RzJ5uP_b-I4-x2-h57_2Q_sQ_O-lV-O_h2w9-G-C_uE2tX12F1N/exec"; 
     
     if (GAS_API_URL && GAS_API_URL.startsWith("http")) {
         try {
