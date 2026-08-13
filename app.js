@@ -64,9 +64,19 @@ async function fetchHistoricalRate(dateStr) {
 
 if (typeof Chart !== 'undefined') { Chart.defaults.color = '#8f95b2'; }
 
+// 🚀 데이터 조회가 완전히 끝난 후 메인 화면을 보여주는 동기화 초기화 함수
 async function initApp() {
-    render(); 
+    const app = document.getElementById('app');
     
+    // 1. 로딩 스피너 및 대기 메시지 표시
+    app.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; justify-center:center; min-height:80vh; gap:16px;">
+            <div style="font-size:16px; font-weight:700; color:var(--text-soft);">실시간 가격 정보를 불러오는 중입니다...</div>
+            <div style="font-size:12px; color:var(--text-soft); opacity:0.6;">잠시만 기다려 주세요.</div>
+        </div>
+    `;
+
+    // 2. 환율 및 주가 데이터 동시 조회 (백엔드)
     let ratePromise = fetch('https://api.frankfurter.app/latest?from=USD&to=KRW')
         .then(res => res.json())
         .then(data => { if (data && data.rates && data.rates.KRW) currentUsdKrw = data.rates.KRW; })
@@ -82,7 +92,10 @@ async function initApp() {
             .catch(e => console.log("실시간 주가 로드 실패"));
     }
 
+    // 3. 두 API 응답이 완전히 완료될 때까지 대기
     await Promise.all([ratePromise, pricePromise]);
+
+    // 4. 조회가 완전히 끝난 후에 메인 화면 렌더링
     render(); 
 }
 
@@ -496,7 +509,6 @@ function bindModalEvents() {
     const addName = document.getElementById('addName');
     const addCode = document.getElementById('addCode');
 
-    // 💡 버그 수정: 종목명이 변경될 때 일치하는 기억 값이 없으면 티커를 즉시 초기화하도록 조건 강화
     addName.addEventListener('input', function() {
         let n = this.value.trim();
         
@@ -510,7 +522,7 @@ function bindModalEvents() {
             addCode.value = n.toUpperCase();
         }
         else {
-            addCode.value = ''; // 기억된 종목이 아니거나 지우는 중이면 즉시 비움
+            addCode.value = ''; 
         }
     });
 
