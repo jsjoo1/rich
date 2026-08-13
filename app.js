@@ -1,10 +1,8 @@
-// 초기 데이터 로드 (initial_data.js 연동)
 let transactions = [];
 if (typeof initialTransactions !== 'undefined') {
   transactions = initialTransactions;
 }
 
-// 대출 설정
 let loanSettings = { rate: 5.5 };
 
 let modal = null;
@@ -14,11 +12,9 @@ let sortBy = 'invested_desc';
 let viewMode = 'list'; 
 let chartInstance = null; 
 
-// 실시간 데이터 저장소
 let currentPrices = {}; 
-let currentUsdKrw = 1300.0; // 기본 환율
+let currentUsdKrw = 1300.0; 
 
-// 종목명 -> 티커(코드) 자동 매칭을 위한 딕셔너리 구축
 let tickerMap = {};
 transactions.forEach(tx => {
     if (tx.name && tx.code) {
@@ -38,7 +34,6 @@ function getSign(val) {
     return val > 0 ? '+' : '';
 }
 
-// 과거 환율 API
 async function fetchHistoricalRate(dateStr) {
     try {
         const res = await fetch(`https://api.frankfurter.app/${dateStr}?from=USD&to=KRW`);
@@ -53,32 +48,31 @@ async function fetchHistoricalRate(dateStr) {
 if (typeof Chart !== 'undefined') { Chart.defaults.color = '#8f95b2'; }
 
 async function initApp() {
-    const loadingEl = document.getElementById('loading');
-    if (loadingEl) loadingEl.innerText = "실시간 현재가 및 환율 동기화 중...";
-
-    try {
-        const res = await fetch('https://api.frankfurter.app/latest?from=USD&to=KRW');
-        const data = await res.json();
-        if (data && data.rates && data.rates.KRW) {
-            currentUsdKrw = data.rates.KRW;
-        }
-    } catch(e) { console.log("환율 로드 실패"); }
+    // 1. 화면 즉시 렌더링 (대기 시간 제거)
+    render(); 
+    
+    // ▼▼▼ 여기에 1단계에서 발급받은 새로운 웹 앱 URL을 붙여넣으세요 ▼▼▼
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyz1AdMif53X1CWtQMnkNuU52wCupKGRL3qBo54Pn6eZvZaw4EKqAqSG3_3U0jeZc_7kw/exec"; 
+    
+    // 2. 백그라운드에서 실시간 데이터 호출
+    let ratePromise = fetch('https://api.frankfurter.app/latest?from=USD&to=KRW')
+        .then(res => res.json())
+        .then(data => { if (data && data.rates && data.rates.KRW) currentUsdKrw = data.rates.KRW; })
+        .catch(e => console.log("환율 로드 실패"));
 
     let uniqueTickers = [...new Set(transactions.map(t => t.code || t.name).filter(c => c))];
+    let pricePromise = Promise.resolve();
 
-    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbw49U0md_xKhA1c5P599LDDUnFG81OQFzuE75Y2P9pqsiPAysbLbuVfUv14m4-hwc3e8w/exec"; 
-    
     if (GAS_API_URL && GAS_API_URL.startsWith("http")) {
-        try {
-            const res = await fetch(GAS_API_URL + "?tickers=" + uniqueTickers.join(','));
-            const data = await res.json();
-            if (data && !data.error) {
-                currentPrices = data;
-            }
-        } catch(e) { console.log("실시간 주가 로드 실패"); }
+        pricePromise = fetch(GAS_API_URL + "?tickers=" + uniqueTickers.join(','))
+            .then(res => res.json())
+            .then(data => { if (data && !data.error) currentPrices = data; })
+            .catch(e => console.log("실시간 주가 로드 실패"));
     }
 
-    render();
+    // 3. API 조회가 완료되면 새로운 가격 정보로 화면을 다시 그림 (자연스러운 업데이트)
+    await Promise.all([ratePromise, pricePromise]);
+    render(); 
 }
 
 function render() {
@@ -205,10 +199,10 @@ function render() {
         html += `
             <div class="kw-table">
                 <div class="kw-header">
-                    <div class="col-name">종목명</div>
+                    <div class="col-name">종목명(보유수량)</div>
+                    <div class="col-price">현재가<br>평균단가</div>
                     <div class="col-pnl">평가손익<br>수익률</div>
-                    <div class="col-qty">보유수량<br>평균단가</div>
-                    <div class="col-amt">매입금액<br>평가금액</div>
+                    <div class="col-amt">평가금액<br>매입금액</div>
                 </div>
         `;
         
@@ -217,7 +211,6 @@ function render() {
             let avgPriceOriginal = p.totalAmountOriginal / p.quantity;
             let displayAvgPrice = p.isOverseas ? usd(avgPriceOriginal) : num(avgPriceOriginal);
             
-            // 현재가
             let curPriceRaw = currentPrices[p.tickerKey] || avgPriceOriginal;
             let displayCurPrice = p.isOverseas ? usd(curPriceRaw) : num(curPriceRaw);
 
@@ -226,23 +219,24 @@ function render() {
             let pColor = getColorClass(stockProfitKRW);
             let pSign = getSign(stockProfitKRW);
             
+            // 4열 UI 맵핑
             html += `
                 <div class="kw-row" onclick="openStockDetail('${name}')">
                     <div class="col-name">
-                        <span>${name}</span>
-                        <span class="ticker">${p.type || '주식'}</span>
+                        <span style="font-size:14px;">${name}</span>
+                        <span class="ticker">${p.quantity.toLocaleString('en-US', {maximumFractionDigits:4})}주</span>
+                    </div>
+                    <div class="col col-price">
+                        <span class="${pColor}">${displayCurPrice}</span>
+                        <span style="color:var(--text-soft); font-size:12px;">${displayAvgPrice}</span>
                     </div>
                     <div class="col ${pColor}">
                         <span>${pSign}${num(stockProfitKRW)}</span>
                         <span>${pSign}${stockReturnRate.toFixed(2)}%</span>
                     </div>
-                    <div class="col col-qty">
-                        <span>${p.quantity.toLocaleString('en-US', {maximumFractionDigits:4})}</span>
-                        <span style="color:var(--text-soft); font-size:12px;">${displayAvgPrice}</span>
-                    </div>
                     <div class="col col-amt">
-                        <span style="color:var(--text-soft);">${num(p.totalAmountKRW)}</span>
-                        <span>${num(p.currentValueKRW)}</span>
+                        <span class="${pColor}">${num(p.currentValueKRW)}</span>
+                        <span style="color:var(--text-soft); font-size:12px;">${num(p.totalAmountKRW)}</span>
                     </div>
                 </div>
             `;
@@ -276,7 +270,7 @@ function render() {
         html += `
             <div class="overlay" id="ovAdd">
                 <div class="sheet">
-                    <div class="sheet-title">새 종목 추가<button class="close" onclick="closeModal()">✕</button></div>
+                    <div class="sheet-title">새 종목 기록<button class="close" onclick="closeModal()">✕</button></div>
                     <div class="field"><label>날짜</label><input type="date" id="addDate" value="${new Date().toISOString().split('T')[0]}"></div>
                     <div class="field"><label>구분</label>
                         <select id="addType">
@@ -492,7 +486,6 @@ function bindModalEvents() {
     const addName = document.getElementById('addName');
     const addCode = document.getElementById('addCode');
 
-    // 종목명 입력 시 티커 자동 매칭 이벤트
     addName.addEventListener('input', function() {
         let n = this.value.trim();
         if (tickerMap[n]) {
