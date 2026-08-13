@@ -1,11 +1,9 @@
-// 초기 데이터 처리 (기본 initial_data가 있어도 덮어쓰기 가능하도록 셋팅)
 let transactions = [];
 if (typeof initialTransactions !== 'undefined') {
   transactions = [...initialTransactions];
 }
 
 let savedTxs = JSON.parse(localStorage.getItem('mySavedTxs') || '[]');
-// 만약 로컬스토리지에 저장된 데이터가 있다면 초기 데이터를 무시하고 로컬 데이터 우선 적용
 if (localStorage.getItem('mySavedTxs')) {
     transactions = [...savedTxs];
 } else {
@@ -243,15 +241,15 @@ function render() {
         
         <div class="page" style="padding:0;">
             <div class="portfolio-tools">
-                <div class="view-toggles" style="display:flex; align-items:center; gap:8px;">
+                <div class="view-toggles">
                     <button class="${viewMode === 'list' ? 'active' : ''}" onclick="window.setViewMode('list')">일반 잔고</button>
                     <button class="${viewMode === 'chart' ? 'active' : ''}" onclick="window.setViewMode('chart')">파이 차트</button>
-                    <!-- 💡 데이터 초기화/업로드 메뉴 버튼 -->
-                    <button onclick="window.openDataModal()" style="margin-left:auto; background:rgba(255,255,255,0.1); border:none; color:var(--text); padding:6px 12px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;">💾 데이터 관리</button>
                 </div>
-                <div class="filter-sort-row">
-                    <input type="text" id="searchInput" placeholder="종목명 검색..." value="${searchText}" oninput="window.setSearchText(this.value)">
-                    <select id="sortSelect" onchange="window.setSortBy(this.value)">
+                <!-- 💡 데이터 관리 버튼을 검색창 바로 옆으로 빼서 충돌을 방지합니다 -->
+                <div class="filter-sort-row" style="display:flex; gap:8px;">
+                    <button onclick="window.openDataModal()" style="flex-shrink:0; background:var(--surface-sub); border:1px solid rgba(255,255,255,0.1); color:var(--text); padding:0 12px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">💾 데이터 백업/업로드</button>
+                    <input type="text" id="searchInput" placeholder="종목명 검색..." value="${searchText}" oninput="window.setSearchText(this.value)" style="flex:1;">
+                    <select id="sortSelect" onchange="window.setSortBy(this.value)" style="flex-shrink:0;">
                         <option value="invested_desc" ${sortBy === 'invested_desc' ? 'selected' : ''}>매입금액순</option>
                         <option value="value_desc" ${sortBy === 'value_desc' ? 'selected' : ''}>평가금액순</option>
                         <option value="name_asc" ${sortBy === 'name_asc' ? 'selected' : ''}>종목명순</option>
@@ -334,11 +332,11 @@ function render() {
                     <div class="sheet-title">💾 데이터 관리<button class="close" onclick="closeModal()">✕</button></div>
                     
                     <div style="background:var(--surface-sub); padding:16px; border-radius:12px; margin-bottom:20px; font-size:13px; color:var(--text-soft); line-height:1.6;">
-                        <span style="color:var(--primary); font-weight:800; font-size:14px;">📊 엑셀/CSV 업로드 안내</span><br><br>
-                        PC나 모바일에 저장된 엑셀(.xlsx) 또는 CSV 파일을 선택하면 기존의 모든 주식 매매 기록이 지워지고 <b>새 파일의 데이터로 덮어씌워집니다.</b> (대출 기록은 유지됨)<br><br>
-                        <b>[필수 헤더 양식]</b> 1행에 아래의 이름이 포함되어야 합니다.<br>
+                        <span style="color:var(--primary); font-weight:800; font-size:14px;">📊 엑셀/CSV 일괄 업로드</span><br><br>
+                        파일을 선택하면 기존 매매 기록이 지워지고 <b>새 파일의 데이터로 덮어씌워집니다.</b><br><br>
+                        <b>[필수 헤더 양식(1행)]</b><br>
                         👉 <span style="color:var(--text);">날짜, 구분, 종목명, 코드, 수량, 단가, 환율</span><br>
-                        (※ '구분'은 "국내주식" 또는 "주식(해외)"로 입력해주세요)
+                        (※ '구분'은 "국내주식" 또는 "주식(해외)"로 기입)
                     </div>
                     
                     <input type="file" id="fileUpload" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style="display:none;" onchange="handleFileUpload(event)">
@@ -626,7 +624,7 @@ window.openLoanModal = function() {
     render();
 }
 
-// 💡 데이터 관리 모달 열기
+// 💡 엑셀 업로드 모달창 열기 함수
 window.openDataModal = function() {
     modal = 'data';
     render();
@@ -640,9 +638,9 @@ window.toggleFundLoan = function(val, wrapId) {
     }
 }
 
-// 💡 포트폴리오 완전 초기화 로직
+// 💡 포트폴리오 완전 초기화 기능
 window.resetPortfolio = function() {
-    if (confirm('정말 보유 중인 모든 매매 기록을 삭제하시겠습니까?\n(대출 정보 및 대출 실행 내역은 삭제되지 않습니다.)')) {
+    if (confirm('정말 보유 중인 모든 매매 기록을 삭제하시겠습니까?\n(대출 정보 및 대출 실행 내역은 안전하게 유지됩니다.)')) {
         savedTxs = [];
         transactions = [];
         localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
@@ -651,7 +649,7 @@ window.resetPortfolio = function() {
     }
 }
 
-// 💡 엑셀 / CSV 파일 업로드 파싱 로직
+// 💡 엑셀 / CSV 파일 업로드 파싱 기능
 window.handleFileUpload = function(e) {
     let file = e.target.files[0];
     if(!file) return;
@@ -671,7 +669,6 @@ window.handleFileUpload = function(e) {
 
             if(confirm('기존 데이터를 모두 지우고 이 파일의 데이터로 덮어쓰시겠습니까?')) {
                 let newTxs = rows.map(row => {
-                    // 엑셀 날짜 형식(숫자) 방어 코드
                     let d = row['날짜'] || row['date'] || new Date().toISOString().split('T')[0];
                     if (typeof d === 'number') {
                         let dateObj = new Date(Math.round((d - 25569) * 86400 * 1000));
@@ -699,7 +696,6 @@ window.handleFileUpload = function(e) {
                 transactions = [...savedTxs];
                 localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
 
-                // 종목명 메모리(티커맵) 업데이트
                 tickerMap = {};
                 transactions.forEach(tx => {
                     if (tx.name && tx.code) tickerMap[tx.name] = tx.code;
@@ -712,7 +708,6 @@ window.handleFileUpload = function(e) {
             alert('파일을 읽는 중 오류가 발생했습니다. 양식을 확인해주세요.');
             console.error(err);
         }
-        // 업로드 후 input 초기화 (동일 파일 재선택 방지)
         document.getElementById('fileUpload').value = '';
     };
     reader.readAsArrayBuffer(file);
@@ -853,7 +848,6 @@ window.submitDetailAdd = function(code) {
     savedTxs.unshift(newTx);
     localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs)); 
 
-    // 💡 대출 연동 처리 로직
     if (fundSource === '대출') {
         let totalAmountKRW = qty * price * (isOvs ? rate : 1.0);
         let loan = loans.find(l => l.id === fundLoanId);
@@ -861,7 +855,7 @@ window.submitDetailAdd = function(code) {
             loan.records.push({
                 id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                 date: date,
-                amount: totalAmountKRW // 매수(+)면 증가, 매도(-)면 감소(상환)
+                amount: totalAmountKRW
             });
             localStorage.setItem('myLoans', JSON.stringify(loans));
         }
@@ -1034,7 +1028,6 @@ window.submitAdd = function() {
     savedTxs.unshift(newTx);
     localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs)); 
 
-    // 💡 대출 연동 로직
     if (fundSource === '대출') {
         let totalAmountKRW = qty * price * (isOvs ? rate : 1.0);
         let loan = loans.find(l => l.id === fundLoanId);
