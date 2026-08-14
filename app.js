@@ -53,8 +53,10 @@ function getPriceTickers() {
     });
     return [...new Set(
         validTxs
-            .map(t => (t.code || '').trim())
-            .filter(c => c && /^([A-Za-z0-9.\-]+|(KRX|KOSDAQ):[A-Za-z0-9]+)$/.test(c))
+            // code 우선, 없으면 name 사용. 단 정규식으로 티커 형태만 통과시킨다.
+            // (한글 종목명은 정규식에서 걸러지므로 야후에 잘못 질의되지 않음)
+            .map(t => (t.code || t.name || '').trim())
+            .filter(c => c && /^([A-Za-z0-9.\-]{1,10}|(KRX|KOSDAQ):[A-Za-z0-9]{6})$/.test(c))
     )];
 }
 
