@@ -347,12 +347,20 @@ function render() {
                     <div style="background:var(--surface-sub); padding:16px; border-radius:12px; margin-bottom:20px; font-size:13px; color:var(--text-soft); line-height:1.6;">
                         <span style="color:var(--primary); font-weight:800; font-size:14px;">📊 엑셀/CSV 일괄 업로드</span><br><br>
                         지원 확장자: <b>.xlsx, .xls, .csv</b><br>
+                        컬럼: 날짜 / 구분 / 종목명 / 코드 / 수량 / 단가 / 환율 / <b style="color:var(--primary);">대출명</b><br>
+                        <span style="font-size:12px;">※ <b>대출명</b>을 적으면 해당 대출의 인출로 자동 기록됩니다(매도는 상환). 대출은 '대출 관리'에서 먼저 등록하세요.</span><br>
                         <button class="primary-btn" onclick="window.downloadTemplate()" style="margin:8px 0; background:var(--surface); border:1px solid var(--primary); color:var(--primary);">📥 양식 다운로드</button>
                     </div>
                     <input type="file" id="fileUpload" accept=".csv, .xlsx, .xls" style="display:none;" onchange="window.handleFileUpload(event)">
                     <div style="display:flex; flex-direction:column; gap:12px;">
                         <button class="primary-btn" onclick="document.getElementById('fileUpload').click()" style="margin:0; background:var(--primary); color:#fff; font-weight:800;">데이터 파일 업로드</button>
-                        <button class="primary-btn" onclick="window.resetPortfolio()" style="margin:0; background:transparent; border:1px solid var(--danger); color:var(--danger); font-weight:800;">🚨 포트폴리오 완전 초기화</button>
+                        <button class="primary-btn" onclick="window.exportData()" style="margin:0; background:var(--surface); border:1px solid var(--primary); color:var(--primary); font-weight:800;">💾 현재 데이터 내보내기 (백업)</button>
+                        <div style="border-top:1px dashed var(--line); margin:8px 0 4px;"></div>
+                        <button class="primary-btn" onclick="window.resetPortfolio()" style="margin:0; background:transparent; border:1px solid var(--line); color:var(--text-soft); font-weight:700;">거래내역만 초기화 <span style="font-size:11px; font-weight:400;">(대출 보존)</span></button>
+                        <button class="primary-btn" onclick="window.resetAll()" style="margin:0; background:transparent; border:1px solid var(--danger); color:var(--danger); font-weight:800;">🚨 전체 초기화 (대출 포함)</button>
+                        <div style="font-size:11px; color:var(--text-soft); line-height:1.6; margin-top:4px;">
+                            ※ 데이터는 이 브라우저에만 저장됩니다. 브라우저의 사이트 데이터를 삭제하거나 다른 기기에서 접속하면 내역이 보이지 않으므로, 주기적으로 백업을 내려받아 두시기 바랍니다.
+                        </div>
                     </div>
                 </div>
             </div>
@@ -370,7 +378,7 @@ function render() {
                 let color = isRepay ? 'var(--primary)' : 'var(--danger)';
 
                 return `<div style="display:flex; justify-content:space-between; align-items:center; padding: 6px 0; border-bottom:1px solid rgba(255,255,255,0.02); font-size:13px;">
-                            <span style="color:var(--text-soft);">${rec.date}</span>
+                            <span style="color:var(--text-soft);">${rec.date}${rec.src === 'upload' ? ' <span style="font-size:10px; background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:4px;">업로드</span>' : ''}</span>
                             <div>
                                 <span style="color:${color}; font-weight:600; margin-right:8px;">${amtStr}원</span>
                                 <button onclick="window.deleteLoanRecord('${l.id}', '${rec.id}')" style="background:var(--surface); border:1px solid var(--line); color:var(--text-soft); font-size:10px; cursor:pointer; padding:2px 6px; border-radius:4px;">삭제</button>
@@ -557,19 +565,115 @@ function showToast(msg) {
 }
 
 window.downloadTemplate = function() {
-    let headers = ["날짜", "구분", "종목명", "코드", "수량", "단가", "환율"];
-    let worksheet = XLSX.utils.aoa_to_sheet([headers]);
-    let workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-    XLSX.writeFile(workbook, "리치맨_포트폴리오_양식.xlsx");
+    const headers = ["날짜", "구분", "종목명", "코드", "수량", "단가", "환율", "대출명"];
+    const loanName = loans.length > 0 ? loans[0].name : "";
+    const sample = [
+        ["2026-01-15", "국내주식", "삼성전자", "KRX:005930", 10, 75000, 1, ""],
+        ["2026-02-03", "해외주식", "AAPL",     "AAPL",       5,   220,  1380, loanName],
+        ["2026-03-10", "해외주식", "AAPL",     "AAPL",      -2,   240,  1400, loanName]
+    ];
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...sample]);
+    ws['!cols'] = [{wch:12},{wch:10},{wch:16},{wch:14},{wch:8},{wch:10},{wch:8},{wch:18}];
+
+    const guide = XLSX.utils.aoa_to_sheet([
+        ["항목", "설명"],
+        ["날짜",   "YYYY-MM-DD 형식 (예: 2026-01-15)"],
+        ["구분",   "국내주식 / 해외주식 / 코인 / 배당금 / 분배금 / 공모주 손익"],
+        ["종목명", "화면에 표시될 이름"],
+        ["코드",   "국내는 KRX:005930 또는 KOSDAQ:046970, 해외는 AAPL 형식. 비우면 종목명을 코드로 사용"],
+        ["수량",   "매수는 양수, 매도는 음수로 입력"],
+        ["단가",   "1주당 가격. 해외주식은 달러 기준"],
+        ["환율",   "해외주식 매수 당시 원/달러 환율. 국내주식은 1"],
+        ["대출명", "★ 비우면 현금 매수. 대출로 매수했다면 앱에 등록한 대출명을 그대로 입력"],
+        ["", ""],
+        ["대출명 사용 안내", ""],
+        ["1", "대출은 앱의 '대출 관리'에서 먼저 등록하세요 (유형·연이자율 필요)"],
+        ["2", "여기에 적는 이름은 등록한 대출명과 정확히 일치해야 합니다"],
+        ["3", "매수(수량 +)는 대출 인출, 매도(수량 −)는 대출 상환으로 자동 기록됩니다"],
+        ["4", "재업로드 시 이전 업로드로 만들어진 대출 기록은 자동 정리됩니다"]
+    ]);
+    guide['!cols'] = [{wch:18},{wch:80}];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "거래내역");
+    XLSX.utils.book_append_sheet(wb, guide, "작성안내");
+    XLSX.writeFile(wb, "리치맨_포트폴리오_양식.xlsx");
 }
 
+// ── 현재 데이터 내보내기 (업로드 양식과 동일한 컬럼) ──────────
+window.exportData = function() {
+    if (transactions.length === 0 && loans.length === 0) { showToast('내보낼 데이터가 없습니다.'); return; }
+
+    const headers = ["날짜", "구분", "종목명", "코드", "수량", "단가", "환율", "대출명"];
+    const rows = transactions.map(t => [
+        t.date, t.type || '', t.name || '', t.code || '',
+        Number(t.quantity || 0), Number(t.price || 0), Number(t.exchangeRate || 1), t.loanName || ''
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    ws['!cols'] = [{wch:12},{wch:10},{wch:16},{wch:14},{wch:8},{wch:12},{wch:8},{wch:18}];
+
+    const lh = ["대출명", "유형", "연이자율(%)", "기록일자", "금액", "출처"];
+    const lr = [];
+    loans.forEach(l => (l.records || []).forEach(r => {
+        lr.push([l.name, l.kind === '마통' ? '마이너스통장' : '일반대출', l.rate, r.date, r.amount, r.src === 'upload' ? '업로드' : '직접입력']);
+    }));
+    if (lr.length === 0) lr.push(["(대출 기록 없음)", "", "", "", "", ""]);
+    const lws = XLSX.utils.aoa_to_sheet([lh, ...lr]);
+    lws['!cols'] = [{wch:18},{wch:14},{wch:12},{wch:12},{wch:14},{wch:10}];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "거래내역");
+    XLSX.utils.book_append_sheet(wb, lws, "대출내역(참고용)");
+    const d = new Date();
+    const stamp = d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+    XLSX.writeFile(wb, `리치맨_백업_${stamp}.xlsx`);
+    showToast(`거래 ${transactions.length}건 / 대출기록 ${lr.length}건 내보내기 완료`);
+}
+
+// ── 거래내역만 초기화 (대출 마스터·직접입력 기록은 보존) ────────
 window.resetPortfolio = function() {
-    if (confirm('모든 매매 기록을 삭제하시겠습니까? (대출 내역은 보존됩니다)')) {
-        savedTxs = []; transactions = [];
-        localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
-        window.closeModal();
-    }
+    const txCount = transactions.length;
+    const upCount = loans.reduce((a, l) => a + (l.records || []).filter(r => r.src === 'upload').length, 0);
+    if (txCount === 0 && upCount === 0) { showToast('삭제할 거래내역이 없습니다.'); return; }
+
+    const msg = `거래내역을 초기화합니다.\n\n` +
+        `  · 삭제: 매매 기록 ${txCount}건\n` +
+        `  · 삭제: 업로드로 생성된 대출 기록 ${upCount}건\n` +
+        `  · 보존: 대출 마스터(${loans.length}건)와 직접 입력한 대출 기록\n\n` +
+        `되돌릴 수 없습니다. 진행할까요?`;
+    if (!confirm(msg)) return;
+
+    savedTxs = []; transactions = [];
+    localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
+    loans.forEach(l => { l.records = (l.records || []).filter(r => r.src !== 'upload'); });
+    localStorage.setItem('myLoans', JSON.stringify(loans));
+
+    window.closeModal();
+    showToast('거래내역이 초기화되었습니다.');
+}
+
+// ── 전체 초기화 (대출 포함) ─────────────────────────────────
+window.resetAll = function() {
+    const txCount = transactions.length;
+    const loanCount = loans.length;
+    const recCount = loans.reduce((a, l) => a + (l.records || []).length, 0);
+    if (txCount === 0 && loanCount === 0) { showToast('삭제할 데이터가 없습니다.'); return; }
+
+    const msg = `⚠️ 전체 초기화\n\n` +
+        `  · 매매 기록 ${txCount}건\n  · 대출 ${loanCount}건 (기록 ${recCount}건)\n\n` +
+        `모두 삭제되며 복구할 수 없습니다.\n먼저 '데이터 내보내기'로 백업하셨나요?\n\n계속하려면 확인을 누르세요.`;
+    if (!confirm(msg)) return;
+
+    const typed = prompt('확인을 위해 아래 문구를 그대로 입력하세요.\n\n초기화');
+    if (typed === null) return;
+    if (String(typed).trim() !== '초기화') { alert('입력이 일치하지 않아 취소되었습니다.'); return; }
+
+    savedTxs = []; transactions = []; loans = [];
+    localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
+    localStorage.setItem('myLoans', JSON.stringify(loans));
+
+    window.closeModal();
+    showToast('전체 데이터가 초기화되었습니다.');
 }
 
 window.handleFileUpload = function(e) {
@@ -581,31 +685,92 @@ window.handleFileUpload = function(e) {
             let data = new Uint8Array(evt.target.result);
             let workbook = XLSX.read(data, {type: 'array'});
             let rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-            if(rows.length > 0 && confirm(`총 ${rows.length}개 데이터를 적용하시겠습니까?`)) {
-                savedTxs = rows.map(row => {
-                    let d = row['날짜'] || new Date().toISOString().split('T')[0];
-                    if (typeof d === 'number') {
-                        let dateObj = new Date(Math.round((d - 25569) * 86400 * 1000));
-                        d = dateObj.toISOString().split('T')[0];
-                    }
-                    return {
-                        portfolio: "업로드",
-                        date: d,
-                        type: row['구분'] || '국내주식',
-                        name: row['종목명'] || '이름없음',
-                        code: row['코드'] || '',
-                        quantity: Number(row['수량'] || 0),
-                        price: Number(row['단가'] || 0),
-                        exchangeRate: Number(row['환율'] || 1.0)
-                    };
-                });
-                transactions = [...savedTxs];
-                localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
-                window.closeModal();
-                showToast('데이터가 적용되었습니다. 페이지를 새로고침합니다.');
-                setTimeout(() => location.reload(), 1500);
+            if (rows.length === 0) { alert('읽을 수 있는 데이터가 없습니다.'); return; }
+
+            // ── 1) 행 파싱 ─────────────────────────────────────
+            const parsed = rows.map((row, i) => {
+                let d = row['날짜'] || new Date().toISOString().split('T')[0];
+                if (typeof d === 'number') {   // 엑셀 일련번호 → 날짜
+                    d = new Date(Math.round((d - 25569) * 86400 * 1000)).toISOString().split('T')[0];
+                }
+                d = String(d).trim().slice(0, 10);
+                return {
+                    _row: i + 2,
+                    portfolio: "업로드",
+                    date: d,
+                    type: String(row['구분'] || '국내주식').trim(),
+                    name: String(row['종목명'] || '이름없음').trim(),
+                    code: String(row['코드'] || '').trim(),
+                    quantity: Number(row['수량'] || 0),
+                    price: Number(row['단가'] || 0),
+                    exchangeRate: Number(row['환율'] || 1.0),
+                    loanName: String(row['대출명'] || '').trim()
+                };
+            });
+
+            // ── 2) 대출명 검증 ─────────────────────────────────
+            const loanByName = {};
+            loans.forEach(l => { loanByName[l.name.trim()] = l; });
+
+            const unknown = {};
+            parsed.forEach(p => {
+                if (p.loanName && !loanByName[p.loanName]) {
+                    unknown[p.loanName] = (unknown[p.loanName] || 0) + 1;
+                }
+            });
+            const unknownNames = Object.keys(unknown);
+            if (unknownNames.length > 0) {
+                const detail = unknownNames.map(nm => `  · ${nm} (${unknown[nm]}건)`).join('\n');
+                const msg = '아래 대출명이 등록되어 있지 않습니다.\n\n' + detail +
+                    '\n\n[확인] 해당 행을 현금 매수로 처리하고 계속 진행\n' +
+                    '[취소] 업로드 중단 → 대출 관리에서 먼저 등록 (권장)';
+                if (!confirm(msg)) { document.getElementById('fileUpload').value = ''; return; }
             }
-        } catch (err) { alert('파일 형식이 올바르지 않습니다.'); }
+
+            const linked = parsed.filter(p => p.loanName && loanByName[p.loanName]).length;
+            const summary = `총 ${parsed.length}건을 적용합니다.\n\n` +
+                `  · 대출 연동: ${linked}건\n  · 현금 매수: ${parsed.length - linked}건\n\n` +
+                `기존 거래내역은 모두 교체됩니다. 진행할까요?`;
+            if (!confirm(summary)) { document.getElementById('fileUpload').value = ''; return; }
+
+            // ── 3) 거래내역 저장 ───────────────────────────────
+            savedTxs = parsed.map(p => ({
+                portfolio: p.portfolio, date: p.date, type: p.type, name: p.name,
+                code: p.code, quantity: p.quantity, price: p.price, exchangeRate: p.exchangeRate,
+                loanName: loanByName[p.loanName] ? p.loanName : ''   // 내보내기 왕복을 위해 보존
+            }));
+            transactions = [...savedTxs];
+            localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
+
+            // ── 4) 대출 기록 반영 (업로드분만 교체) ──────────────
+            // src === 'upload' 인 기록만 제거 → 수동 입력분(상환 등)은 보존
+            loans.forEach(l => { l.records = (l.records || []).filter(r => r.src !== 'upload'); });
+
+            parsed.forEach(p => {
+                const loan = loanByName[p.loanName];
+                if (!loan) return;
+                const isOvs = (p.exchangeRate > 100) || p.type.includes('해외');
+                const amtKRW = Math.round(p.quantity * p.price * (isOvs ? p.exchangeRate : 1));
+                if (!amtKRW) return;
+                // 매수(+) = 인출, 매도(−) = 상환
+                loan.records.push({
+                    id: 'up_' + p._row + '_' + Math.random().toString(36).substr(2, 5),
+                    date: p.date,
+                    amount: amtKRW,
+                    src: 'upload'
+                });
+            });
+            loans.forEach(l => l.records.sort((a, b) => String(a.date).localeCompare(String(b.date))));
+            localStorage.setItem('myLoans', JSON.stringify(loans));
+
+            window.closeModal();
+            showToast(`${parsed.length}건 적용 완료 (대출연동 ${linked}건)`);
+            setTimeout(() => location.reload(), 1500);
+
+        } catch (err) {
+            console.error('[UPLOAD]', err);
+            alert('파일을 처리하지 못했습니다.\n\n' + err.message);
+        }
         document.getElementById('fileUpload').value = '';
     };
     reader.readAsArrayBuffer(file);
@@ -720,6 +885,9 @@ window.submitAdd = function() {
     if (fundSource === '대출') {
         let loan = loans.find(l => l.id === fundLoanId);
         if (loan) {
+            newTx.loanName = loan.name;
+            savedTxs[0].loanName = loan.name;
+            localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
             loan.records.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), date: document.getElementById('addDate').value, amount: totalAmountKRW });
             localStorage.setItem('myLoans', JSON.stringify(loans));
         }
