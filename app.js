@@ -13,6 +13,7 @@ localStorage.setItem('myLoans', JSON.stringify(loans));
 
 let modal = null; let selectedStock = null; let searchText = ''; let sortBy = 'invested_desc'; let viewMode = 'list'; let chartInstance = null;
 let currentPrices = {}; let currentUsdKrw = 1300.0;
+let priceStatus = { ok: true, msg: '', missing: [] }; let lastPriceUpdate = null;
 let tickerMap = {};
 transactions.forEach(tx => { if (tx.name && tx.code) tickerMap[tx.name] = tx.code.trim(); });
 
@@ -38,11 +39,10 @@ function usd(n) {
 function getColorClass(val) { if (val > 0) return 'c-up'; if (val < 0) return 'c-down'; return 'c-even'; }
 function getSign(val) { return val > 0 ? '+' : ''; }
 
-async function fetchHistoricalRate(dateStr) {
-    try { const res = await fetch(`https://api.frankfurter.app/${dateStr}?from=USD&to=KRW`); const data = await res.json(); return data.rates.KRW; } catch (e) { return null; }
-}
 
-async function updatePricesInBackground() {
+// ── 시세 조회 대상 티커 산출 ───────────────────────────────
+// code 가 있는 종목만 조회한다. (한글 종목명을 야후에 던지면 무조건 실패)
+function getPriceTickers() {
     let validTxs = transactions.filter(t => {
         if (!t.type && !t.name) return false;
         let type = (t.type || '').toLowerCase();
@@ -51,47 +51,99 @@ async function updatePricesInBackground() {
         if (type.includes('손익') || type.includes('분배') || type.includes('배당')) return false;
         return true;
     });
+    return [...new Set(
+        validTxs
+            .map(t => (t.code || '').trim())
+            .filter(c => c && /^([A-Za-z0-9.\-]+|(KRX|KOSDAQ):[A-Za-z0-9]+)$/.test(c))
+    )];
+}
 
-    let uniqueTickers = [...new Set(validTxs.map(t => (t.code || t.name).trim()).filter(c => c))];
-    
-    let ratePromise = fetch('https://api.frankfurter.app/latest?from=USD&to=KRW')
-        .then(res => res.json())
-        .then(data => { if (data && data.rates && data.rates.KRW) currentUsdKrw = data.rates.KRW; })
-        .catch(e => console.log("환율 로드 실패"));
+// ── 환율: 여러 소스를 순차 폴백 ─────────────────────────────
+const FX_SOURCES = [
+    { url: 'https://api.frankfurter.dev/v1/latest?base=USD&symbols=KRW', pick: d => d?.rates?.KRW },
+    { url: 'https://api.frankfurter.app/latest?from=USD&to=KRW',         pick: d => d?.rates?.KRW },
+    { url: 'https://open.er-api.com/v6/latest/USD',                      pick: d => d?.rates?.KRW }
+];
 
-    let pricePromise = Promise.resolve();
+async function fetchUsdKrw() {
+    for (const s of FX_SOURCES) {
+        try {
+            const res = await fetch(s.url, { cache: 'no-store' });
+            if (!res.ok) continue;
+            const v = s.pick(await res.json());
+            if (v && isFinite(v)) { currentUsdKrw = Number(v); return true; }
+        } catch (e) { /* 다음 소스로 */ }
+    }
+    console.warn('[FX] 모든 환율 소스 실패 — 직전 값 유지:', currentUsdKrw);
+    return false;
+}
 
-    if (GAS_API_URL && GAS_API_URL.startsWith("http") && uniqueTickers.length > 0) {
-        // 💡 핵심: 티커가 많으면(60개 이상) GAS 실행 시간이 길어져 CORS 헤더 없는 오류(net::ERR_FAILED)가 발생함.
-        // 15개씩 나눠서 여러 요청을 동시에(병렬로) 보내면 각 요청이 짧게 끝나서 타임아웃을 피할 수 있음.
-        const BATCH_SIZE = 15;
-        let batches = [];
-        for (let i = 0; i < uniqueTickers.length; i += BATCH_SIZE) {
-            batches.push(uniqueTickers.slice(i, i + BATCH_SIZE));
-        }
+async function fetchHistoricalRate(dateStr) {
+    const urls = [
+        `https://api.frankfurter.dev/v1/${dateStr}?base=USD&symbols=KRW`,
+        `https://api.frankfurter.app/${dateStr}?from=USD&to=KRW`
+    ];
+    for (const u of urls) {
+        try {
+            const res = await fetch(u);
+            if (!res.ok) continue;
+            const d = await res.json();
+            if (d?.rates?.KRW) return d.rates.KRW;
+        } catch (e) { /* 다음 */ }
+    }
+    return null;
+}
 
-        let batchPromises = batches.map(batch => {
-            let tickersQuery = encodeURIComponent(batch.join(','));
-            return fetch(GAS_API_URL + "?tickers=" + tickersQuery)
-                .then(res => {
-                    if (!res.ok) throw new Error("Server HTTP Error: " + res.status);
-                    return res.json();
-                })
-                .then(data => {
-                    if (data && !data.error) {
-                        let resultData = data.result || data.data || data;
-                        Object.assign(currentPrices, resultData); // 배치별 결과를 순서 상관없이 병합
-                    }
-                })
-                .catch(e => {
-                    console.error("실시간 주가 배치 로드 실패:", batch, e);
-                });
-        });
+// ── 시세 조회 ─────────────────────────────────────────────
+async function fetchPrices() {
+    const tickers = getPriceTickers();
+    if (!GAS_API_URL || !GAS_API_URL.startsWith('http') || tickers.length === 0) return;
 
-        pricePromise = Promise.all(batchPromises);
+    const url = GAS_API_URL + '?tickers=' + encodeURIComponent(tickers.join(','));
+    let res;
+    try {
+        res = await fetch(url, { cache: 'no-store' });
+    } catch (e) {
+        priceStatus = { ok: false, msg: '시세 서버에 연결하지 못했습니다(네트워크/CORS).' };
+        console.error('[PRICE] fetch 실패:', e);
+        return;
+    }
+    if (!res.ok) {
+        priceStatus = { ok: false, msg: '시세 서버 오류 HTTP ' + res.status };
+        console.error('[PRICE] HTTP', res.status);
+        return;
     }
 
-    await Promise.all([ratePromise, pricePromise]);
+    let data;
+    try { data = await res.json(); }
+    catch (e) {
+        priceStatus = { ok: false, msg: '시세 서버가 JSON이 아닌 응답을 반환했습니다(배포 권한 확인 필요).' };
+        console.error('[PRICE] JSON 파싱 실패:', e);
+        return;
+    }
+
+    if (data.error) {
+        priceStatus = { ok: false, msg: '시세 서버 오류: ' + data.error };
+        console.error('[PRICE] 서버 오류:', data);
+        return;
+    }
+
+    const result = data.data || data.result || {};
+    Object.assign(currentPrices, result);
+
+    const missing = data.missing || tickers.filter(t => currentPrices[t] === undefined);
+    priceStatus = {
+        ok: missing.length === 0,
+        msg: missing.length === 0 ? '' : `시세 미수신 ${missing.length}종목: ${missing.join(', ')}`,
+        missing
+    };
+    if (missing.length) console.warn('[PRICE] 미수신:', missing);
+    else console.log('[PRICE] 전체 정상 (' + tickers.length + '종목)');
+}
+
+async function updatePricesInBackground() {
+    await Promise.all([ fetchUsdKrw(), fetchPrices() ]);
+    lastPriceUpdate = new Date();
     render();
 }
 
@@ -109,7 +161,7 @@ async function initApp() {
     if (!loaded) { loaded = true; clearTimeout(timeout); render(); }
     
     // 💡 핵심: API 쿼터 초과 방지를 위해 60초 간격으로 갱신 주기 연장
-    setInterval(updatePricesInBackground, 60000);
+    setInterval(updatePricesInBackground, 180000);
 }
 
 function render() {
@@ -173,6 +225,7 @@ function render() {
     });
 
     let html = `
+        ${priceStatus.ok ? '' : `<div style="background:rgba(255,90,90,0.12); border:1px solid rgba(255,90,90,0.35); color:#ff8f8f; padding:10px 12px; border-radius:10px; font-size:12px; margin-bottom:12px; line-height:1.5;">⚠️ ${priceStatus.msg}</div>`}
         <div class="kw-summary">
             <div class="kw-summary-title">
                 총 실질손익(원) 
