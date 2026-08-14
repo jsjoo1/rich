@@ -366,8 +366,8 @@ function render() {
                         <button class="primary-btn" onclick="document.getElementById('fileUpload').click()" style="margin:0; background:var(--primary); color:#fff; font-weight:800;">데이터 파일 업로드</button>
                         <button class="primary-btn" onclick="window.exportData()" style="margin:0; background:var(--surface); border:1px solid var(--primary); color:var(--primary); font-weight:800;">💾 현재 데이터 내보내기 (백업)</button>
                         <div style="border-top:1px dashed var(--line); margin:8px 0 4px;"></div>
-                        <button class="primary-btn" onclick="window.resetPortfolio()" style="margin:0; background:transparent; border:1px solid var(--line); color:var(--text-soft); font-weight:700;">거래내역만 초기화 <span style="font-size:11px; font-weight:400;">(대출 보존)</span></button>
-                        <button class="primary-btn" onclick="window.resetAll()" style="margin:0; background:transparent; border:1px solid var(--danger); color:var(--danger); font-weight:800;">🚨 전체 초기화 (대출 포함)</button>
+                        <button class="primary-btn" onclick="window.resetPortfolio()" style="margin:0; background:transparent; border:1px solid var(--danger); color:var(--danger); font-weight:800;">🔄 거래내역 초기화 <span style="font-size:11px; font-weight:600;">(대출 보존)</span></button>
+                        <button onclick="window.resetAll()" style="width:100%; margin:0; padding:8px 0; background:transparent; border:none; color:var(--text-soft); font-size:12px; font-weight:400; text-decoration:underline; text-underline-offset:3px; cursor:pointer; opacity:0.65;">전체 초기화 (대출 포함)</button>
                         <div style="font-size:11px; color:var(--text-soft); line-height:1.6; margin-top:4px;">
                             ※ 데이터는 이 브라우저에만 저장됩니다. 브라우저의 사이트 데이터를 삭제하거나 다른 기기에서 접속하면 내역이 보이지 않으므로, 주기적으로 백업을 내려받아 두시기 바랍니다.
                         </div>
