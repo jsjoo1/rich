@@ -41,13 +41,15 @@ function getColorClass(val) { if (val > 0) return 'c-up'; if (val < 0) return 'c
 function getSign(val) { return val > 0 ? '+' : ''; }
 
 // 이자 계산용 경과일수. 타임존 영향을 없애기 위해 날짜(연·월·일)만으로 비교한다.
-// 당일 실행 건은 0일로 처리하여 1일치 이자 과대계상을 방지한다.
+// 실행일 당일을 1일로 계산한다(양편넣기). 예: 4/27 실행 → 8/14 기준 110일.
+// 은행에 따라 실행일 당일을 제외하기도 하므로, 그 경우 아래 + 1 을 제거하면 된다.
 function daysBetween(fromStr, toDate) {
     const p = String(fromStr).split('-').map(Number);
     if (p.length < 3 || isNaN(p[0])) return 0;
     const a = Date.UTC(p[0], p[1] - 1, p[2]);
     const b = Date.UTC(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
-    return Math.max(0, Math.round((b - a) / 86400000));
+    const d = Math.round((b - a) / 86400000);
+    return d < 0 ? 0 : d + 1;      // 미래 일자는 0, 그 외는 당일 포함
 }
 
 
