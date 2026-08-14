@@ -7,6 +7,7 @@ let loans = JSON.parse(localStorage.getItem('myLoans') || '[]');
 loans = loans.map(l => {
     if(!l.id) l.id = Date.now().toString() + Math.random().toString(36).substr(2, 5);
     if(!l.records) { l.records = []; if(l.amount && Number(l.amount) > 0) { l.records.push({id: Date.now().toString(), date: l.startDate || new Date().toISOString().split('T')[0], amount: Number(l.amount)}); } }
+    if(!l.kind) l.kind = '일반';   // 기존 대출은 '일반'으로 간주
     return l;
 });
 localStorage.setItem('myLoans', JSON.stringify(loans));
@@ -38,6 +39,16 @@ function usd(n) {
 }
 function getColorClass(val) { if (val > 0) return 'c-up'; if (val < 0) return 'c-down'; return 'c-even'; }
 function getSign(val) { return val > 0 ? '+' : ''; }
+
+// 이자 계산용 경과일수. 타임존 영향을 없애기 위해 날짜(연·월·일)만으로 비교한다.
+// 당일 실행 건은 0일로 처리하여 1일치 이자 과대계상을 방지한다.
+function daysBetween(fromStr, toDate) {
+    const p = String(fromStr).split('-').map(Number);
+    if (p.length < 3 || isNaN(p[0])) return 0;
+    const a = Date.UTC(p[0], p[1] - 1, p[2]);
+    const b = Date.UTC(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
+    return Math.max(0, Math.round((b - a) / 86400000));
+}
 
 
 // ── 시세 조회 대상 티커 산출 ───────────────────────────────
@@ -181,7 +192,7 @@ function render() {
     
     loans.forEach(loan => { 
         loan.records.forEach(rec => { 
-            let diffDays = Math.max(0, Math.ceil((today.getTime() - new Date(rec.date).getTime()) / 86400000)); 
+            let diffDays = daysBetween(rec.date, today); 
             accruedInterest += rec.amount * (loan.rate / 100) / 365 * diffDays; 
         }); 
     });
@@ -351,7 +362,7 @@ function render() {
             let currentPrincipal = 0; let currentInterest = 0;
             let recordsHtml = l.records.map(rec => {
                 currentPrincipal += rec.amount;
-                let diffDays = Math.max(0, Math.ceil((today.getTime() - new Date(rec.date).getTime()) / 86400000));
+                let diffDays = daysBetween(rec.date, today);
                 currentInterest += rec.amount * (l.rate / 100) / 365 * diffDays;
                 
                 let isRepay = rec.amount < 0;
@@ -370,20 +381,20 @@ function render() {
             return `
                 <div style="background:var(--surface-sub); padding:16px; border-radius:12px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.05);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                        <span style="font-weight:800; color:var(--text); font-size:16px;">${l.name} <span style="font-size:12px; color:var(--primary); margin-left:4px; font-weight:600;">연 ${l.rate}%</span></span>
+                        <span style="font-weight:800; color:var(--text); font-size:16px;">${l.name} <span style="font-size:11px; background:${l.kind === '마통' ? 'rgba(255,180,60,0.15)' : 'rgba(58,130,246,0.15)'}; color:${l.kind === '마통' ? '#ffb43c' : 'var(--primary)'}; padding:2px 7px; border-radius:6px; margin-left:6px; font-weight:700;">${l.kind === '마통' ? '마이너스통장' : '일반대출'}</span> <span style="font-size:12px; color:var(--primary); margin-left:4px; font-weight:600;">연 ${l.rate}%</span></span>
                         <div>
                             <button onclick="window.deleteLoan('${l.id}')" style="background:transparent; border:none; color:var(--danger); cursor:pointer; font-size:13px; padding:4px 8px;">대출삭제</button>
                         </div>
                     </div>
-                    <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px;"><span style="color:var(--text-soft);">현재 잔액</span><span style="font-weight:700;">${num(currentPrincipal)}원</span></div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px;"><span style="color:var(--text-soft);">${l.kind === '마통' ? '현재 사용액' : '대출 잔액'}</span><span style="font-weight:700;">${num(currentPrincipal)}원</span></div>
                     <div style="display:flex; justify-content:space-between; margin-bottom:16px; font-size:14px;"><span style="color:var(--text-soft);">누적 이자</span><span style="font-weight:700; color:var(--danger);">${num(currentInterest)}원</span></div>
                     <div style="background:rgba(0,0,0,0.15); padding:12px; border-radius:8px; margin-bottom:12px;">
-                        <div style="font-size:12px; color:var(--text-soft); margin-bottom:8px; font-weight:700;">대출 실행 및 상환 내역</div>
+                        <div style="font-size:12px; color:var(--text-soft); margin-bottom:8px; font-weight:700;">${l.kind === '마통' ? '인출 및 상환 내역 (인출 +, 상환 −)' : '실행 및 원금상환 내역 (실행 +, 상환 −)'}</div>
                         ${recordsHtml || '<div style="font-size:12px; color:var(--text-soft);">내역이 없습니다.</div>'}
                     </div>
                     <div style="display:flex; gap:6px;">
                         <input type="date" id="recDate_${l.id}" value="${new Date().toISOString().split('T')[0]}" style="flex:1; font-size:13px; padding:10px; background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:8px;">
-                        <input type="number" id="recAmt_${l.id}" placeholder="금액 (-상환)" style="flex:1.5; font-size:13px; padding:10px; background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:8px;">
+                        <input type="number" id="recAmt_${l.id}" placeholder="${l.kind === '마통' ? '인출 +, 상환 −' : '추가실행 +, 상환 −'}" style="flex:1.5; font-size:13px; padding:10px; background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:8px;">
                         <button onclick="window.addLoanRecord('${l.id}')" style="background:var(--primary); color:#fff; border:none; border-radius:8px; padding:0 14px; font-size:13px; font-weight:700; cursor:pointer;">추가</button>
                     </div>
                 </div>`;
@@ -396,8 +407,19 @@ function render() {
                     <div style="max-height:400px; overflow-y:auto; margin-bottom:24px;" id="loanListScroll">${loanListHtml || '<div style="text-align:center; padding:30px; color:var(--text-soft); font-size:14px;">등록된 대출이 없습니다.</div>'}</div>
                     <div style="border-top:1px dashed var(--line); padding-top:20px;">
                         <div style="font-size: 15px; font-weight: 800; margin-bottom: 16px; color: var(--text);">+ 새로운 대출 추가</div>
-                        <div class="field"><label>대출명</label><input type="text" id="loanName"></div>
-                        <div class="field"><label>연 이자율 (%)</label><input type="number" step="0.01" id="loanRate"></div>
+                        <div class="field"><label>대출명</label><input type="text" id="loanName" placeholder="예: 마통(국민은행)"></div>
+                        <div class="field"><label>대출 유형</label>
+                            <select id="loanKind" onchange="window.onLoanKindChange()">
+                                <option value="일반">일반대출 (원금 전액 실행)</option>
+                                <option value="마통">마이너스통장 (쓴 만큼 이자)</option>
+                            </select>
+                        </div>
+                        <div class="field"><label>연 이자율 (%)</label><input type="number" step="0.01" id="loanRate" placeholder="예: 5.2"></div>
+                        <div class="field"><label id="loanAmountLabel">대출 실행금액 (원)</label><input type="number" id="loanAmount" placeholder="대출받은 원금 전액"></div>
+                        <div class="field"><label id="loanDateLabel">실행일</label><input type="date" id="loanDate" value="${new Date().toISOString().split('T')[0]}"></div>
+                        <div id="loanKindHelp" style="background:rgba(58,130,246,0.10); border:1px solid rgba(58,130,246,0.30); color:var(--text-soft); padding:10px 12px; border-radius:10px; font-size:12px; line-height:1.6; margin-bottom:16px;">
+                            <b style="color:var(--primary);">일반대출</b> — 실행일에 원금 전액을 입력하세요. 이후 원금을 상환하면 아래 내역에 <b>마이너스 금액</b>으로 기록합니다.
+                        </div>
                         <button class="primary-btn" onclick="window.submitLoanAdd()">대출 등록</button>
                     </div>
                 </div>
@@ -589,15 +611,44 @@ window.handleFileUpload = function(e) {
     reader.readAsArrayBuffer(file);
 }
 
+window.onLoanKindChange = function() {
+    const kind = document.getElementById('loanKind').value;
+    const isNeg = (kind === '마통');
+    document.getElementById('loanAmountLabel').textContent = isNeg ? '현재 사용중인 금액 (원)' : '대출 실행금액 (원)';
+    document.getElementById('loanDateLabel').textContent   = isNeg ? '해당 금액을 인출한 날짜' : '실행일';
+    document.getElementById('loanAmount').placeholder      = isNeg ? '한도가 아니라 실제 쓴 금액' : '대출받은 원금 전액';
+    document.getElementById('loanKindHelp').innerHTML = isNeg
+        ? '<b style="color:#ffb43c;">마이너스통장</b> — <b>한도가 아니라 실제 사용중인 금액</b>을 입력하세요. 한도를 입력하면 이자가 과대계상됩니다. 이후 인출은 <b>플러스</b>, 상환은 <b>마이너스</b>로 기록하면 일별 잔액 기준으로 이자가 계산됩니다.'
+        : '<b style="color:var(--primary);">일반대출</b> — 실행일에 원금 전액을 입력하세요. 이후 원금을 상환하면 아래 내역에 <b>마이너스 금액</b>으로 기록합니다.';
+}
+
 window.submitLoanAdd = function() {
-    let name = document.getElementById('loanName').value;
-    let rate = Number(document.getElementById('loanRate').value);
-    if(name && rate) {
-        loans.push({ id: Date.now().toString(), name, rate, records: [] });
-        localStorage.setItem('myLoans', JSON.stringify(loans));
-        render();
-        showToast('대출이 등록되었습니다.');
+    let name   = (document.getElementById('loanName').value || '').trim();
+    let kind   = document.getElementById('loanKind').value;
+    let rate   = Number(document.getElementById('loanRate').value);
+    let amount = Number(document.getElementById('loanAmount').value || 0);
+    let date   = document.getElementById('loanDate').value;
+
+    if (!name)          { showToast('대출명을 입력해주세요.'); return; }
+    if (!rate || rate <= 0) { showToast('연 이자율을 입력해주세요.'); return; }
+    if (amount < 0)     { showToast('실행금액은 0 이상이어야 합니다.'); return; }
+    if (amount > 0 && !date) { showToast('실행일을 선택해주세요.'); return; }
+
+    let records = [];
+    if (amount > 0) {
+        records.push({
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+            date: date,
+            amount: amount
+        });
     }
+
+    loans.push({ id: Date.now().toString(), name, kind, rate, records });
+    localStorage.setItem('myLoans', JSON.stringify(loans));
+    render();
+    showToast(amount > 0
+        ? `${name} 등록 완료 (${num(amount)}원)`
+        : `${name} 등록 완료 — 아래 카드에서 금액을 추가하세요.`);
 }
 
 window.deleteLoan = function(id) {
