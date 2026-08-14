@@ -528,6 +528,7 @@ function render() {
             el.value = tempInputs[id];
             if (id === 'addFundSource') window.toggleFundLoan(el.value, 'addFundLoanWrap');
             if (id === 'detailFundSource') window.toggleFundLoan(el.value, 'detailFundLoanWrap');
+            if (id === 'loanKind') window.onLoanKindChange();
         }
     });
 
@@ -838,6 +839,17 @@ window.onLoanKindChange = function() {
         : '<b style="color:var(--primary);">일반대출</b> — 실행일에 원금 전액을 입력하세요. 이후 원금을 상환하면 아래 내역에 <b>마이너스 금액</b>으로 기록합니다.';
 }
 
+// 대출 등록 폼 초기화
+function clearLoanForm() {
+    const setV = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    setV('loanName', '');
+    setV('loanRate', '');
+    setV('loanAmount', '');
+    setV('loanKind', '일반');
+    setV('loanDate', new Date().toISOString().split('T')[0]);
+    if (document.getElementById('loanKind')) window.onLoanKindChange();
+}
+
 window.submitLoanAdd = function() {
     let name   = (document.getElementById('loanName').value || '').trim();
     let kind   = document.getElementById('loanKind').value;
@@ -861,6 +873,8 @@ window.submitLoanAdd = function() {
 
     loans.push({ id: Date.now().toString(), name, kind, rate, records });
     localStorage.setItem('myLoans', JSON.stringify(loans));
+
+    clearLoanForm();   // render() 이전에 비워야 값이 복원되지 않음
     render();
     showToast(amount > 0
         ? `${name} 등록 완료 (${num(amount)}원)`
@@ -887,7 +901,8 @@ window.addLoanRecord = function(loanId) {
     if(loan) {
         loan.records.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), date: date, amount: amount });
         localStorage.setItem('myLoans', JSON.stringify(loans));
-        amtInput.value = ''; 
+        amtInput.value = '';
+        dateInput.value = new Date().toISOString().split('T')[0];
         render();
         showToast('내역이 추가되었습니다.');
     }
