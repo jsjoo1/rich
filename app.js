@@ -285,6 +285,7 @@ function render() {
                     <div class="col-price">현재가<br>평균단가</div>
                     <div class="col-pnl">평가손익<br>수익률</div>
                     <div class="col-amt">평가금액<br>매입금액</div>
+                    <div class="col-wt">보유<br>비중</div>
                 </div>
         `;
         activeStocks.forEach(name => {
@@ -299,6 +300,11 @@ function render() {
             let stockReturnRate = p.totalAmountKRW > 0 ? (stockProfitKRW / p.totalAmountKRW) * 100 : 0;
             let pColor = getColorClass(stockProfitKRW);
             let pSign = getSign(stockProfitKRW);
+
+            // 보유 비중 = 해당 종목 평가금액 / 포트폴리오 전체 평가금액 (정수 %)
+            let weightPct = totalCurrentValue > 0
+                ? Math.round(p.currentValueKRW / totalCurrentValue * 100) : 0;
+            let barPct = Math.max(0, Math.min(100, weightPct));
 
             html += `
                 <div class="kw-row" onclick="window.openStockDetail('${name}')">
@@ -317,6 +323,10 @@ function render() {
                     <div class="col col-amt">
                         <span class="${pColor}">${num(p.currentValueKRW)}</span>
                         <span style="color:var(--text-soft); font-size:12px;">${num(p.totalAmountKRW)}</span>
+                    </div>
+                    <div class="col col-wt">
+                        <span class="wt-val">${weightPct}%</span>
+                        <span class="wt-bar"><i style="width:${barPct}%"></i></span>
                     </div>
                 </div>
             `;
@@ -347,8 +357,8 @@ function render() {
                     <div style="background:var(--surface-sub); padding:16px; border-radius:12px; margin-bottom:20px; font-size:13px; color:var(--text-soft); line-height:1.6;">
                         <span style="color:var(--primary); font-weight:800; font-size:14px;">📊 엑셀/CSV 일괄 업로드</span><br><br>
                         지원 확장자: <b>.xlsx, .xls, .csv</b><br>
-                        컬럼: 날짜 / 구분 / 종목명 / 코드 / 수량 / 단가 / 환율 / <b style="color:var(--primary);">대출명</b><br>
-                        <span style="font-size:12px;">※ <b>대출명</b>을 적으면 해당 대출의 인출로 자동 기록됩니다(매도는 상환). 대출은 '대출 관리'에서 먼저 등록하세요.</span><br>
+                        컬럼: 날짜 / 구분 / 종목명 / 코드 / 수량 / 단가 / 환율 / <b style="color:var(--primary);">마통여부</b><br>
+                        <span style="font-size:12px;">※ 마이너스통장으로 매수한 건은 <b>마통여부에 Y</b>를 입력하세요. 매수금액(수량×단가×환율)이 마통 인출로, 매도는 상환으로 자동 기록되어 누적이자가 계산됩니다. 마이너스통장은 '대출 관리'에 미리 등록해 두세요.</span><br>
                         <button class="primary-btn" onclick="window.downloadTemplate()" style="margin:8px 0; background:var(--surface); border:1px solid var(--primary); color:var(--primary);">📥 양식 다운로드</button>
                     </div>
                     <input type="file" id="fileUpload" accept=".csv, .xlsx, .xls" style="display:none;" onchange="window.handleFileUpload(event)">
@@ -565,15 +575,14 @@ function showToast(msg) {
 }
 
 window.downloadTemplate = function() {
-    const headers = ["날짜", "구분", "종목명", "코드", "수량", "단가", "환율", "대출명"];
-    const loanName = loans.length > 0 ? loans[0].name : "";
+    const headers = ["날짜", "구분", "종목명", "코드", "수량", "단가", "환율", "마통여부"];
     const sample = [
         ["2026-01-15", "국내주식", "삼성전자", "KRX:005930", 10, 75000, 1, ""],
-        ["2026-02-03", "해외주식", "AAPL",     "AAPL",       5,   220,  1380, loanName],
-        ["2026-03-10", "해외주식", "AAPL",     "AAPL",      -2,   240,  1400, loanName]
+        ["2026-02-03", "해외주식", "AAPL",     "AAPL",       5,   220,  1380, "Y"],
+        ["2026-03-10", "해외주식", "AAPL",     "AAPL",      -2,   240,  1400, "Y"]
     ];
     const ws = XLSX.utils.aoa_to_sheet([headers, ...sample]);
-    ws['!cols'] = [{wch:12},{wch:10},{wch:16},{wch:14},{wch:8},{wch:10},{wch:8},{wch:18}];
+    ws['!cols'] = [{wch:12},{wch:10},{wch:16},{wch:14},{wch:8},{wch:10},{wch:8},{wch:10}];
 
     const guide = XLSX.utils.aoa_to_sheet([
         ["항목", "설명"],
@@ -584,13 +593,18 @@ window.downloadTemplate = function() {
         ["수량",   "매수는 양수, 매도는 음수로 입력"],
         ["단가",   "1주당 가격. 해외주식은 달러 기준"],
         ["환율",   "해외주식 매수 당시 원/달러 환율. 국내주식은 1"],
-        ["대출명", "★ 비우면 현금 매수. 대출로 매수했다면 앱에 등록한 대출명을 그대로 입력"],
+        ["마통여부", "★ 마이너스통장으로 매수한 건이면 Y. 자기 돈으로 샀으면 비워 두세요"],
         ["", ""],
-        ["대출명 사용 안내", ""],
-        ["1", "대출은 앱의 '대출 관리'에서 먼저 등록하세요 (유형·연이자율 필요)"],
-        ["2", "여기에 적는 이름은 등록한 대출명과 정확히 일치해야 합니다"],
-        ["3", "매수(수량 +)는 대출 인출, 매도(수량 −)는 대출 상환으로 자동 기록됩니다"],
-        ["4", "재업로드 시 이전 업로드로 만들어진 대출 기록은 자동 정리됩니다"]
+        ["마통여부 처리 방식", ""],
+        ["1", "매수금액 = 수량 × 단가 × 환율 (국내는 환율 1)"],
+        ["2", "Y로 표시된 매수건은 마이너스통장 '인출'로 자동 기록됩니다"],
+        ["3", "Y로 표시된 매도건(수량 음수)은 '상환'으로 자동 기록됩니다"],
+        ["4", "일별 잔액 기준으로 누적이자가 자동 계산됩니다"],
+        ["5", "마이너스통장은 '대출 관리'에서 유형을 '마이너스통장'으로 미리 등록해 두세요"],
+        ["6", "일반대출(원금 전액 실행)은 대출 관리에서 직접 관리하므로 이 컬럼과 무관합니다"],
+        ["7", "재업로드 시 이전 업로드로 만들어진 마통 기록은 자동 정리됩니다"],
+        ["", ""],
+        ["파일 형식", "xlsx 권장. csv도 업로드 가능하며 한글 인코딩은 자동 보정됩니다"]
     ]);
     guide['!cols'] = [{wch:18},{wch:80}];
 
@@ -604,13 +618,14 @@ window.downloadTemplate = function() {
 window.exportData = function() {
     if (transactions.length === 0 && loans.length === 0) { showToast('내보낼 데이터가 없습니다.'); return; }
 
-    const headers = ["날짜", "구분", "종목명", "코드", "수량", "단가", "환율", "대출명"];
+    const headers = ["날짜", "구분", "종목명", "코드", "수량", "단가", "환율", "마통여부"];
     const rows = transactions.map(t => [
         t.date, t.type || '', t.name || '', t.code || '',
-        Number(t.quantity || 0), Number(t.price || 0), Number(t.exchangeRate || 1), t.loanName || ''
+        Number(t.quantity || 0), Number(t.price || 0), Number(t.exchangeRate || 1),
+        t.isMargin ? 'Y' : ''
     ]);
     const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    ws['!cols'] = [{wch:12},{wch:10},{wch:16},{wch:14},{wch:8},{wch:12},{wch:8},{wch:18}];
+    ws['!cols'] = [{wch:12},{wch:10},{wch:16},{wch:14},{wch:8},{wch:12},{wch:8},{wch:10}];
 
     const lh = ["대출명", "유형", "연이자율(%)", "기록일자", "금액", "출처"];
     const lr = [];
@@ -676,95 +691,131 @@ window.resetAll = function() {
     showToast('전체 데이터가 초기화되었습니다.');
 }
 
+// CSV 인코딩 자동 판별 (UTF-8 / UTF-8 BOM / EUC-KR·CP949)
+function decodeCsvBytes(bytes) {
+    if (bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+        return new TextDecoder('utf-8').decode(bytes.subarray(3));
+    }
+    const utf8 = new TextDecoder('utf-8').decode(bytes);
+    if (utf8.indexOf('\uFFFD') === -1) return utf8;   // 치환문자 없으면 UTF-8 확정
+    try {
+        const euc = new TextDecoder('euc-kr').decode(bytes);
+        console.log('[UPLOAD] CSV를 EUC-KR로 재해석했습니다.');
+        return euc;
+    } catch (e) { return utf8; }
+}
+
+// 마통여부 컬럼 값 해석
+function isMarginFlag(v) {
+    const t = String(v == null ? '' : v).trim().toUpperCase();
+    return ['Y','YES','O','TRUE','1','예','마통','ㅇ'].indexOf(t) >= 0;
+}
+
 window.handleFileUpload = function(e) {
     let file = e.target.files[0];
     if(!file) return;
+    const isCsv = /\.csv$/i.test(file.name);
     let reader = new FileReader();
     reader.onload = function(evt) {
         try {
-            let data = new Uint8Array(evt.target.result);
-            let workbook = XLSX.read(data, {type: 'array'});
-            let rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+            const bytes = new Uint8Array(evt.target.result);
+            const workbook = isCsv
+                ? XLSX.read(decodeCsvBytes(bytes), { type: 'string' })
+                : XLSX.read(bytes, { type: 'array' });
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
             if (rows.length === 0) { alert('읽을 수 있는 데이터가 없습니다.'); return; }
 
-            // ── 1) 행 파싱 ─────────────────────────────────────
+            // ── 1) 행 파싱 ─────────────────────────────────
             const parsed = rows.map((row, i) => {
                 let d = row['날짜'] || new Date().toISOString().split('T')[0];
-                if (typeof d === 'number') {   // 엑셀 일련번호 → 날짜
+                if (typeof d === 'number') {
                     d = new Date(Math.round((d - 25569) * 86400 * 1000)).toISOString().split('T')[0];
                 }
                 d = String(d).trim().slice(0, 10);
+                const type = String(row['구분'] || '국내주식').trim();
+                const qty  = Number(row['수량'] || 0);
+                const prc  = Number(row['단가'] || 0);
+                const fx   = Number(row['환율'] || 1.0);
+                const isOvs = (fx > 100) || type.includes('해외');
                 return {
                     _row: i + 2,
                     portfolio: "업로드",
                     date: d,
-                    type: String(row['구분'] || '국내주식').trim(),
+                    type: type,
                     name: String(row['종목명'] || '이름없음').trim(),
                     code: String(row['코드'] || '').trim(),
-                    quantity: Number(row['수량'] || 0),
-                    price: Number(row['단가'] || 0),
-                    exchangeRate: Number(row['환율'] || 1.0),
-                    loanName: String(row['대출명'] || '').trim()
+                    quantity: qty,
+                    price: prc,
+                    exchangeRate: fx,
+                    isMargin: isMarginFlag(row['마통여부']),
+                    amountKRW: Math.round(qty * prc * (isOvs ? fx : 1))
                 };
             });
 
-            // ── 2) 대출명 검증 ─────────────────────────────────
-            const loanByName = {};
-            loans.forEach(l => { loanByName[l.name.trim()] = l; });
+            const marginRows = parsed.filter(p => p.isMargin);
 
-            const unknown = {};
-            parsed.forEach(p => {
-                if (p.loanName && !loanByName[p.loanName]) {
-                    unknown[p.loanName] = (unknown[p.loanName] || 0) + 1;
+            // ── 2) 마이너스통장 계좌 확정 ───────────────────
+            let target = null;
+            if (marginRows.length > 0) {
+                const margins = loans.filter(l => l.kind === '마통');
+                if (margins.length === 0) {
+                    alert('마통여부가 Y인 행이 ' + marginRows.length + '건 있으나,\n' +
+                          "'대출 관리'에 마이너스통장으로 등록된 대출이 없습니다.\n\n" +
+                          '먼저 마이너스통장을 등록한 뒤 다시 업로드해 주세요.');
+                    document.getElementById('fileUpload').value = '';
+                    return;
+                } else if (margins.length === 1) {
+                    target = margins[0];
+                } else {
+                    const list = margins.map((l, i) => `  ${i + 1}. ${l.name} (연 ${l.rate}%)`).join('\n');
+                    const pick = prompt('마이너스통장이 여러 개입니다.\n어느 계좌에 반영할지 번호를 입력하세요.\n\n' + list);
+                    if (pick === null) { document.getElementById('fileUpload').value = ''; return; }
+                    const idx = parseInt(pick, 10) - 1;
+                    if (isNaN(idx) || idx < 0 || idx >= margins.length) { alert('번호가 올바르지 않아 취소되었습니다.'); document.getElementById('fileUpload').value = ''; return; }
+                    target = margins[idx];
                 }
-            });
-            const unknownNames = Object.keys(unknown);
-            if (unknownNames.length > 0) {
-                const detail = unknownNames.map(nm => `  · ${nm} (${unknown[nm]}건)`).join('\n');
-                const msg = '아래 대출명이 등록되어 있지 않습니다.\n\n' + detail +
-                    '\n\n[확인] 해당 행을 현금 매수로 처리하고 계속 진행\n' +
-                    '[취소] 업로드 중단 → 대출 관리에서 먼저 등록 (권장)';
-                if (!confirm(msg)) { document.getElementById('fileUpload').value = ''; return; }
             }
 
-            const linked = parsed.filter(p => p.loanName && loanByName[p.loanName]).length;
-            const summary = `총 ${parsed.length}건을 적용합니다.\n\n` +
-                `  · 대출 연동: ${linked}건\n  · 현금 매수: ${parsed.length - linked}건\n\n` +
-                `기존 거래내역은 모두 교체됩니다. 진행할까요?`;
+            // ── 3) 요약 확인 ───────────────────────────────
+            const inAmt  = marginRows.filter(p => p.amountKRW > 0).reduce((a, p) => a + p.amountKRW, 0);
+            const outAmt = marginRows.filter(p => p.amountKRW < 0).reduce((a, p) => a + p.amountKRW, 0);
+            let summary = `총 ${parsed.length}건을 적용합니다.\n\n`;
+            if (target) {
+                summary += `[마이너스통장: ${target.name} (연 ${target.rate}%)]\n` +
+                           `  · 인출(매수) ${marginRows.filter(p=>p.amountKRW>0).length}건  ${num(inAmt)}원\n` +
+                           `  · 상환(매도) ${marginRows.filter(p=>p.amountKRW<0).length}건  ${num(outAmt)}원\n` +
+                           `  · 순 사용액  ${num(inAmt + outAmt)}원\n\n`;
+            } else {
+                summary += `마통 연동 행 없음 (전액 자기자금)\n\n`;
+            }
+            summary += '기존 거래내역은 모두 교체됩니다. 진행할까요?';
             if (!confirm(summary)) { document.getElementById('fileUpload').value = ''; return; }
 
-            // ── 3) 거래내역 저장 ───────────────────────────────
+            // ── 4) 거래내역 저장 ───────────────────────────
             savedTxs = parsed.map(p => ({
                 portfolio: p.portfolio, date: p.date, type: p.type, name: p.name,
-                code: p.code, quantity: p.quantity, price: p.price, exchangeRate: p.exchangeRate,
-                loanName: loanByName[p.loanName] ? p.loanName : ''   // 내보내기 왕복을 위해 보존
+                code: p.code, quantity: p.quantity, price: p.price,
+                exchangeRate: p.exchangeRate, isMargin: p.isMargin
             }));
             transactions = [...savedTxs];
             localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
 
-            // ── 4) 대출 기록 반영 (업로드분만 교체) ──────────────
-            // src === 'upload' 인 기록만 제거 → 수동 입력분(상환 등)은 보존
+            // ── 5) 마통 기록 반영 (업로드분만 교체) ──────────
             loans.forEach(l => { l.records = (l.records || []).filter(r => r.src !== 'upload'); });
-
-            parsed.forEach(p => {
-                const loan = loanByName[p.loanName];
-                if (!loan) return;
-                const isOvs = (p.exchangeRate > 100) || p.type.includes('해외');
-                const amtKRW = Math.round(p.quantity * p.price * (isOvs ? p.exchangeRate : 1));
-                if (!amtKRW) return;
-                // 매수(+) = 인출, 매도(−) = 상환
-                loan.records.push({
-                    id: 'up_' + p._row + '_' + Math.random().toString(36).substr(2, 5),
-                    date: p.date,
-                    amount: amtKRW,
-                    src: 'upload'
+            if (target) {
+                marginRows.forEach(p => {
+                    if (!p.amountKRW) return;
+                    target.records.push({
+                        id: 'up_' + p._row + '_' + Math.random().toString(36).substr(2, 5),
+                        date: p.date, amount: p.amountKRW, src: 'upload'
+                    });
                 });
-            });
+            }
             loans.forEach(l => l.records.sort((a, b) => String(a.date).localeCompare(String(b.date))));
             localStorage.setItem('myLoans', JSON.stringify(loans));
 
             window.closeModal();
-            showToast(`${parsed.length}건 적용 완료 (대출연동 ${linked}건)`);
+            showToast(`${parsed.length}건 적용 (마통 ${marginRows.length}건)`);
             setTimeout(() => location.reload(), 1500);
 
         } catch (err) {
@@ -885,8 +936,7 @@ window.submitAdd = function() {
     if (fundSource === '대출') {
         let loan = loans.find(l => l.id === fundLoanId);
         if (loan) {
-            newTx.loanName = loan.name;
-            savedTxs[0].loanName = loan.name;
+            if (loan.kind === '마통') { newTx.isMargin = true; savedTxs[0].isMargin = true; }
             localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
             loan.records.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), date: document.getElementById('addDate').value, amount: totalAmountKRW });
             localStorage.setItem('myLoans', JSON.stringify(loans));

@@ -36,18 +36,23 @@ body { margin: 0; background-color: #0b0c0e; font-family: "Pretendard", sans-ser
 .filter-sort-row select { width: 110px; border: 1px solid var(--line); background: var(--surface-sub); color: var(--text); padding: 10px; border-radius: 10px; font-size: 13px; outline: none; }
 .chart-container { background: var(--surface); padding: 20px; min-height: 300px; display: flex; align-items: center; justify-content: center; }
 
-/* 4열 그리드 레이아웃 적용 */
+/* 5열 그리드 레이아웃 (종목명 / 현재가 / 손익 / 금액 / 비중) */
 .kw-table { width: 100%; display: flex; flex-direction: column; border-top: 1px solid var(--line); margin-top: 8px;}
-.kw-header { display: grid; grid-template-columns: 1.2fr 0.9fr 0.9fr 1fr; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 11px; color: var(--text-soft); text-align: right; background: var(--surface-sub); align-items: center;}
+.kw-header { display: grid; grid-template-columns: 1.05fr 0.8fr 0.8fr 0.95fr 0.52fr; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 11px; color: var(--text-soft); text-align: right; background: var(--surface-sub); align-items: center;}
 .kw-header .col-name { text-align: left; padding-left: 20px; }
-.kw-header .col-amt { padding-right: 20px; }
+.kw-header .col-wt { padding-right: 20px; }
 
-.kw-row { display: grid; grid-template-columns: 1.2fr 0.9fr 0.9fr 1fr; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; text-align: right; align-items: center; cursor: pointer; transition: background 0.2s; }
+.kw-row { display: grid; grid-template-columns: 1.05fr 0.8fr 0.8fr 0.95fr 0.52fr; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; text-align: right; align-items: center; cursor: pointer; transition: background 0.2s; }
 .kw-row:active { background: var(--surface-sub); }
 .kw-row .col-name { text-align: left; padding-left: 20px; font-weight: 800; color: var(--text); display: flex; flex-direction: column; gap: 4px; font-size: 15px; }
 .kw-row .col-name .ticker { font-size: 12px; color: var(--text-soft); font-weight: 600; }
 .kw-row .col { display: flex; flex-direction: column; gap: 4px; font-weight: 600; }
-.kw-row .col-amt { padding-right: 20px; }
+.kw-row .col-wt { padding-right: 20px; }
+
+/* 보유 비중 */
+.kw-row .col-wt .wt-val { font-size: 14px; font-weight: 800; color: var(--text); }
+.kw-row .col-wt .wt-bar { width: 100%; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.kw-row .col-wt .wt-bar > i { display: block; height: 100%; background: var(--primary); border-radius: 2px; }
 
 .c-up { color: var(--up) !important; }
 .c-down { color: var(--down) !important; }
