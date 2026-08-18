@@ -10,7 +10,7 @@ loans = loans.map(l => {
     if(!l.kind) l.kind = '일반';   // 기존 대출은 '일반'으로 간주
     return l;
 });
-localStorage.setItem('myLoans', JSON.stringify(loans));
+localStorage.setItem('myLoans', JSON.stringify(loans));   // persist() 정의 전이므로 직접 저장
 
 let modal = null; let selectedStock = null; let searchText = ''; let sortBy = 'invested_desc'; let viewMode = 'list'; let chartInstance = null;
 let currentPrices = {}; let currentUsdKrw = 1300.0;
@@ -25,6 +25,154 @@ function isTxOverseas(tx) {
     if (tx.name === '달러') return true;
     if (tx.type === '주식') { if (tx.code && (tx.code.includes('KRX') || tx.code.includes('KOSDAQ'))) return false; return true; }
     return false;
+}
+
+// ══════════════ 서버 동기화 (PC·모바일 공용) ══════════════
+// 원칙: 서버가 비어 있으면 절대 로컬을 덮어쓰지 않는다.
+//       양쪽에 데이터가 있으면 사용자가 선택한다.
+
+let syncKey = localStorage.getItem('richSyncKey') || '';
+let syncState = { busy: false, msg: '', at: null };
+let syncTimer = null;
+let syncReady = false;   // 최초 동기화가 끝나기 전에는 자동 저장하지 않는다
+
+function persist() {
+    localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
+    localStorage.setItem('myLoans', JSON.stringify(loans));
+    if (syncKey && syncReady) scheduleSync();
+}
+
+function scheduleSync() {
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(saveToServer, 3000);   // 연속 변경은 3초 뒤 한 번만
+}
+
+async function callSync(action, extra) {
+    const body = Object.assign({ key: syncKey, action: action }, extra || {});
+    const res = await fetch(GAS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // preflight 회피
+        body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    return data;
+}
+
+async function saveToServer(silent) {
+    if (!syncKey || syncState.busy) return false;
+    syncState.busy = true; if (!silent) render();
+    try {
+        await callSync('save', { tx: savedTxs, loans: loans });
+        syncState = { busy: false, msg: '', at: new Date() };
+        console.log('[SYNC] 저장 완료 — 거래 ' + savedTxs.length + '건');
+        render();
+        return true;
+    } catch (e) {
+        syncState = { busy: false, msg: '저장 실패: ' + e.message, at: syncState.at };
+        console.error('[SYNC] 저장 실패', e);
+        render();
+        return false;
+    }
+}
+
+// 서버 데이터를 가져오되, 적용 여부는 호출자가 결정한다
+async function fetchServer() {
+    const r = await callSync('load');
+    return { tx: Array.isArray(r.tx) ? r.tx : [], loans: Array.isArray(r.loans) ? r.loans : [] };
+}
+
+function applyServer(r) {
+    savedTxs = r.tx;
+    transactions = [...savedTxs];
+    loans = r.loans.map(l => { if (!l.records) l.records = []; if (!l.kind) l.kind = '일반'; return l; });
+    localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
+    localStorage.setItem('myLoans', JSON.stringify(loans));
+}
+
+// 앱 시작 시 호출. 로컬을 함부로 지우지 않는 것이 핵심.
+async function initialSync() {
+    if (!syncKey) return;
+    syncState.busy = true;
+    let r;
+    try {
+        r = await fetchServer();
+    } catch (e) {
+        syncState = { busy: false, msg: '서버 연결 실패 — 이 기기 데이터로 표시합니다', at: null };
+        console.error('[SYNC] 초기 조회 실패', e);
+        return;   // syncReady 를 켜지 않는다 → 자동 저장도 하지 않음
+    }
+    const localN = savedTxs.length, serverN = r.tx.length;
+    console.log('[SYNC] 로컬 ' + localN + '건 / 서버 ' + serverN + '건');
+
+    if (serverN === 0 && localN === 0) {
+        syncReady = true;
+    } else if (serverN === 0 && localN > 0) {
+        // 서버가 비었다 → 절대 덮어쓰지 않고, 로컬을 서버로 올린다
+        syncReady = true;
+        await saveToServer(true);
+        showToast('이 기기 데이터 ' + localN + '건을 서버에 등록했어요');
+    } else if (localN === 0) {
+        applyServer(r);
+        syncReady = true;
+    } else if (serverN === localN) {
+        applyServer(r);   // 같은 건수면 서버 기준
+        syncReady = true;
+    } else {
+        // 양쪽에 서로 다른 데이터가 있다 → 사용자가 선택
+        const useServer = confirm(
+            '이 기기와 서버의 데이터가 다릅니다.\n\n' +
+            '  · 이 기기 : 거래 ' + localN + '건\n' +
+            '  · 서버    : 거래 ' + serverN + '건\n\n' +
+            '[확인] 서버 데이터를 사용 (이 기기 내용은 사라집니다)\n' +
+            '[취소] 이 기기 데이터를 사용 (서버에 덮어씁니다)'
+        );
+        if (useServer) { applyServer(r); syncReady = true; }
+        else { syncReady = true; await saveToServer(true); }
+    }
+    syncState = { busy: false, msg: '', at: new Date() };
+}
+
+window.setupSync = async function() {
+    const k = prompt('기기 간 동기화 액세스 키' + (syncKey ? ' (현재 설정됨)' : '') +
+        '\n\nApps Script의 ACCESS_KEY 와 같은 값을 입력하세요.\n비우고 확인하면 동기화를 해제합니다.', syncKey);
+    if (k === null) return;
+    syncKey = String(k).trim();
+    if (!syncKey) {
+        localStorage.removeItem('richSyncKey');
+        syncReady = false;
+        syncState = { busy: false, msg: '', at: null };
+        showToast('동기화를 해제했습니다. 이 기기에만 저장됩니다.');
+        render(); return;
+    }
+    localStorage.setItem('richSyncKey', syncKey);
+    syncReady = false;
+    showToast('서버 확인 중…');
+    await initialSync();
+    render();
+    showToast(syncState.msg || '동기화 연결 완료');
+}
+
+window.forceUpload = async function() {
+    if (!syncKey) { showToast('먼저 액세스 키를 설정하세요.'); return; }
+    if (!confirm('이 기기의 데이터로 서버를 덮어씁니다.\n\n거래 ' + savedTxs.length + '건, 대출 ' + loans.length + '건\n\n진행할까요?')) return;
+    syncReady = true;
+    const ok = await saveToServer();
+    showToast(ok ? '서버에 저장했습니다.' : (syncState.msg || '저장 실패'));
+}
+
+window.forceDownload = async function() {
+    if (!syncKey) { showToast('먼저 액세스 키를 설정하세요.'); return; }
+    let r;
+    try { r = await fetchServer(); }
+    catch (e) { showToast('서버 조회 실패: ' + e.message); return; }
+    if (r.tx.length === 0 && !confirm('서버에 거래 데이터가 없습니다.\n\n그래도 받아오면 이 기기 내역이 모두 사라집니다.\n진행할까요?')) return;
+    if (!confirm('서버 데이터(거래 ' + r.tx.length + '건)로 이 기기를 덮어씁니다.\n진행할까요?')) return;
+    applyServer(r);
+    syncReady = true;
+    render();
+    showToast('서버에서 불러왔습니다.');
 }
 
 const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx9u7YR3LDC_8ELh3hBiKOu7Grq2vv4IB7tZU3MfMg-bXcoIxnQpAXcwdMJ_qVoxEPjHA/exec"; 
@@ -169,8 +317,10 @@ async function initApp() {
     </div>`;
 
     let loaded = false;
-    let timeout = setTimeout(() => { if (!loaded) { loaded = true; render(); } }, 10000);
-    
+    let timeout = setTimeout(() => { if (!loaded) { loaded = true; render(); } }, 20000);
+
+    await initialSync();          // 서버 데이터 확인 (로컬을 함부로 지우지 않음)
+
     await updatePricesInBackground();
     
     if (!loaded) { loaded = true; clearTimeout(timeout); render(); }
@@ -366,12 +516,29 @@ function render() {
                     <input type="file" id="fileUpload" accept=".csv, .xlsx, .xls" style="display:none;" onchange="window.handleFileUpload(event)">
                     <div style="display:flex; flex-direction:column; gap:12px;">
                         <button class="primary-btn" onclick="document.getElementById('fileUpload').click()" style="margin:0; background:var(--primary); color:#fff; font-weight:800;">데이터 파일 업로드</button>
+                        <div style="background:var(--surface-sub); padding:14px; border-radius:12px; border:1px solid ${syncKey ? 'rgba(58,130,246,0.35)' : 'var(--line)'};">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <span style="font-weight:800; font-size:14px; color:var(--text);">🔄 기기 간 동기화</span>
+                                <span style="font-size:11px; padding:2px 8px; border-radius:6px; background:${syncKey ? 'rgba(58,130,246,0.15)' : 'rgba(255,255,255,0.06)'}; color:${syncKey ? 'var(--primary)' : 'var(--text-soft)'}; font-weight:700;">${syncKey ? (syncState.busy ? '동기화 중' : '연결됨') : '미설정'}</span>
+                            </div>
+                            <div style="font-size:12px; color:var(--text-soft); line-height:1.6; margin-bottom:10px;">
+                                ${syncKey
+                                    ? (syncState.msg
+                                        ? '<span style=\'color:#ff8f8f\'>' + syncState.msg + '</span>'
+                                        : '거래 ' + savedTxs.length + '건 · 변경 시 자동 저장' + (syncState.at ? ' · 최근 ' + syncState.at.toLocaleTimeString('ko-KR') : ''))
+                                    : 'PC·모바일 어디서나 같은 데이터를 보려면 액세스 키를 설정하세요.'}
+                            </div>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                <button onclick="window.setupSync()" style="flex:1; min-width:90px; padding:9px 0; background:var(--primary); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">${syncKey ? '키 변경' : '액세스 키 설정'}</button>
+                                ${syncKey ? '<button onclick="window.forceUpload()" style="flex:1; min-width:90px; padding:9px 0; background:var(--surface); color:var(--text-soft); border:1px solid var(--line); border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">서버에 올리기</button><button onclick="window.forceDownload()" style="flex:1; min-width:90px; padding:9px 0; background:var(--surface); color:var(--text-soft); border:1px solid var(--line); border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">서버에서 받기</button>' : ''}
+                            </div>
+                        </div>
                         <button class="primary-btn" onclick="window.exportData()" style="margin:0; background:var(--surface); border:1px solid var(--primary); color:var(--primary); font-weight:800;">💾 현재 데이터 내보내기 (백업)</button>
                         <div style="border-top:1px dashed var(--line); margin:8px 0 4px;"></div>
                         <button class="primary-btn" onclick="window.resetPortfolio()" style="margin:0; background:transparent; border:1px solid var(--danger); color:var(--danger); font-weight:800;">🔄 거래내역 초기화 <span style="font-size:11px; font-weight:600;">(대출 보존)</span></button>
                         <button onclick="window.resetAll()" style="width:100%; margin:0; padding:8px 0; background:transparent; border:none; color:var(--text-soft); font-size:12px; font-weight:400; text-decoration:underline; text-underline-offset:3px; cursor:pointer; opacity:0.65;">전체 초기화 (대출 포함)</button>
                         <div style="font-size:11px; color:var(--text-soft); line-height:1.6; margin-top:4px;">
-                            ※ 데이터는 이 브라우저에만 저장됩니다. 브라우저의 사이트 데이터를 삭제하거나 다른 기기에서 접속하면 내역이 보이지 않으므로, 주기적으로 백업을 내려받아 두시기 바랍니다.
+                            ※ 동기화를 설정하지 않으면 데이터는 이 브라우저에만 저장됩니다. 사이트 데이터를 삭제하거나 다른 기기에서 접속하면 내역이 보이지 않습니다.
                         </div>
                     </div>
                 </div>
@@ -662,9 +829,9 @@ window.resetPortfolio = function() {
     if (!confirm(msg)) return;
 
     savedTxs = []; transactions = [];
-    localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
+    persist();
     loans.forEach(l => { l.records = (l.records || []).filter(r => r.src !== 'upload'); });
-    localStorage.setItem('myLoans', JSON.stringify(loans));
+    persist();
 
     window.closeModal();
     showToast('거래내역이 초기화되었습니다.');
@@ -687,8 +854,8 @@ window.resetAll = function() {
     if (String(typed).trim() !== '초기화') { alert('입력이 일치하지 않아 취소되었습니다.'); return; }
 
     savedTxs = []; transactions = []; loans = [];
-    localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
-    localStorage.setItem('myLoans', JSON.stringify(loans));
+    persist();
+    persist();
 
     window.closeModal();
     showToast('전체 데이터가 초기화되었습니다.');
@@ -801,7 +968,7 @@ window.handleFileUpload = function(e) {
                 exchangeRate: p.exchangeRate, isMargin: p.isMargin
             }));
             transactions = [...savedTxs];
-            localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
+            persist();
 
             // ── 5) 마통 기록 반영 (업로드분만 교체) ──────────
             loans.forEach(l => { l.records = (l.records || []).filter(r => r.src !== 'upload'); });
@@ -815,7 +982,7 @@ window.handleFileUpload = function(e) {
                 });
             }
             loans.forEach(l => l.records.sort((a, b) => String(a.date).localeCompare(String(b.date))));
-            localStorage.setItem('myLoans', JSON.stringify(loans));
+            persist();
 
             window.closeModal();
             showToast(`${parsed.length}건 적용 (마통 ${marginRows.length}건)`);
@@ -874,7 +1041,7 @@ window.submitLoanAdd = function() {
     }
 
     loans.push({ id: Date.now().toString(), name, kind, rate, records });
-    localStorage.setItem('myLoans', JSON.stringify(loans));
+    persist();
 
     clearLoanForm();   // render() 이전에 비워야 값이 복원되지 않음
     render();
@@ -886,7 +1053,7 @@ window.submitLoanAdd = function() {
 window.deleteLoan = function(id) {
     if (confirm('이 대출과 모든 내역을 정말 삭제하시겠습니까?')) {
         loans = loans.filter(l => l.id !== id);
-        localStorage.setItem('myLoans', JSON.stringify(loans));
+        persist();
         render();
     }
 }
@@ -902,7 +1069,7 @@ window.addLoanRecord = function(loanId) {
     let loan = loans.find(l => l.id === loanId);
     if(loan) {
         loan.records.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), date: date, amount: amount });
-        localStorage.setItem('myLoans', JSON.stringify(loans));
+        persist();
         amtInput.value = '';
         dateInput.value = new Date().toISOString().split('T')[0];
         render();
@@ -915,7 +1082,7 @@ window.deleteLoanRecord = function(loanId, recId) {
         let loan = loans.find(l => l.id === loanId);
         if(loan) {
             loan.records = loan.records.filter(r => r.id !== recId);
-            localStorage.setItem('myLoans', JSON.stringify(loans));
+            persist();
             render();
         }
     }
@@ -948,15 +1115,15 @@ window.submitAdd = function() {
     };
     transactions.unshift(newTx);
     savedTxs.unshift(newTx);
-    localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
+    persist();
 
     if (fundSource === '대출') {
         let loan = loans.find(l => l.id === fundLoanId);
         if (loan) {
             if (loan.kind === '마통') { newTx.isMargin = true; savedTxs[0].isMargin = true; }
-            localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
+            persist();
             loan.records.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), date: document.getElementById('addDate').value, amount: totalAmountKRW });
-            localStorage.setItem('myLoans', JSON.stringify(loans));
+            persist();
         }
     }
 
@@ -992,14 +1159,14 @@ window.submitDetailAdd = function(code) {
 
     transactions.unshift(newTx);
     savedTxs.unshift(newTx);
-    localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs)); 
+    persist(); 
 
     if (fundSource === '대출') {
         let totalAmountKRW = qty * price * (isOvs ? rate : 1.0);
         let loan = loans.find(l => l.id === fundLoanId);
         if (loan) {
             loan.records.push({ id: Date.now().toString() + Math.random().toString(36).substr(2, 5), date: date, amount: totalAmountKRW });
-            localStorage.setItem('myLoans', JSON.stringify(loans));
+            persist();
         }
     }
 
