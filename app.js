@@ -47,28 +47,44 @@ function scheduleSync() {
     syncTimer = setTimeout(saveToServer, 3000);   // 연속 변경은 3초 뒤 한 번만
 }
 
-async function callSync(action, extra) {
-    const body = Object.assign({ key: syncKey, action: action }, extra || {});
-    const res = await fetch(GAS_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // preflight 회피
-        body: JSON.stringify(body)
-    });
+// 조회는 GET. Apps Script 는 POST 시 리디렉션이 일어나 CORS 가 막히는 경우가 많다.
+async function getSync(action) {
+    const url = GAS_API_URL + '?action=' + action + '&key=' + encodeURIComponent(syncKey) + '&t=' + Date.now();
+    const res = await fetch(url, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     return data;
 }
 
+// 저장은 POST + no-cors. 응답은 읽을 수 없으므로 직후 조회로 검증한다.
+async function postSync(payload) {
+    await fetch(GAS_API_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(Object.assign({ key: syncKey, action: 'save' }, payload))
+    });
+}
+
 async function saveToServer(silent) {
     if (!syncKey || syncState.busy) return false;
     syncState.busy = true; if (!silent) render();
+    const expect = savedTxs.length;
     try {
-        await callSync('save', { tx: savedTxs, loans: loans });
-        syncState = { busy: false, msg: '', at: new Date() };
-        console.log('[SYNC] 저장 완료 — 거래 ' + savedTxs.length + '건');
+        await postSync({ tx: savedTxs, loans: loans });
+        await new Promise(r => setTimeout(r, 1500));     // 서버 기록 대기
+        let ok = false;
+        try {
+            const v = await getSync('load');
+            ok = Array.isArray(v.tx) && v.tx.length === expect;
+        } catch (e) { ok = false; }
+        syncState = ok
+            ? { busy: false, msg: '', at: new Date() }
+            : { busy: false, msg: '저장 확인 실패 — 서버에 올리기를 다시 눌러주세요', at: syncState.at };
+        console.log('[SYNC] 저장 ' + (ok ? '완료' : '미확인') + ' — 거래 ' + expect + '건');
         render();
-        return true;
+        return ok;
     } catch (e) {
         syncState = { busy: false, msg: '저장 실패: ' + e.message, at: syncState.at };
         console.error('[SYNC] 저장 실패', e);
@@ -79,7 +95,7 @@ async function saveToServer(silent) {
 
 // 서버 데이터를 가져오되, 적용 여부는 호출자가 결정한다
 async function fetchServer() {
-    const r = await callSync('load');
+    const r = await getSync('load');
     return { tx: Array.isArray(r.tx) ? r.tx : [], loans: Array.isArray(r.loans) ? r.loans : [] };
 }
 
@@ -154,6 +170,18 @@ window.setupSync = async function() {
     showToast(syncState.msg || '동기화 연결 완료');
 }
 
+window.pingSync = async function() {
+    if (!syncKey) { showToast('먼저 액세스 키를 설정하세요.'); return; }
+    try {
+        const r = await getSync('ping');
+        showToast('서버 연결 정상 (' + (r.ver || '') + ')');
+        console.log('[SYNC] ping', r);
+    } catch (e) {
+        showToast('연결 실패: ' + e.message);
+        console.error('[SYNC] ping 실패', e);
+    }
+}
+
 window.forceUpload = async function() {
     if (!syncKey) { showToast('먼저 액세스 키를 설정하세요.'); return; }
     if (!confirm('이 기기의 데이터로 서버를 덮어씁니다.\n\n거래 ' + savedTxs.length + '건, 대출 ' + loans.length + '건\n\n진행할까요?')) return;
@@ -175,7 +203,7 @@ window.forceDownload = async function() {
     showToast('서버에서 불러왔습니다.');
 }
 
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbx9u7YR3LDC_8ELh3hBiKOu7Grq2vv4IB7tZU3MfMg-bXcoIxnQpAXcwdMJ_qVoxEPjHA/exec"; 
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyX7fpfen3DBS7z7h107L1IrZ5LJiwDSQd0cj8dA-tFC4G_HSyrDtfvmMZ3Og4eSc67OA/exec"; 
 
 function num(n) { 
     if(isNaN(n) || !isFinite(n)) return "0";
@@ -530,7 +558,7 @@ function render() {
                             </div>
                             <div style="display:flex; gap:6px; flex-wrap:wrap;">
                                 <button onclick="window.setupSync()" style="flex:1; min-width:90px; padding:9px 0; background:var(--primary); color:#fff; border:none; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">${syncKey ? '키 변경' : '액세스 키 설정'}</button>
-                                ${syncKey ? '<button onclick="window.forceUpload()" style="flex:1; min-width:90px; padding:9px 0; background:var(--surface); color:var(--text-soft); border:1px solid var(--line); border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">서버에 올리기</button><button onclick="window.forceDownload()" style="flex:1; min-width:90px; padding:9px 0; background:var(--surface); color:var(--text-soft); border:1px solid var(--line); border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">서버에서 받기</button>' : ''}
+                                ${syncKey ? '<button onclick="window.pingSync()" style="flex:1; min-width:90px; padding:9px 0; background:var(--surface); color:var(--text-soft); border:1px solid var(--line); border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">연결 테스트</button><button onclick="window.forceUpload()" style="flex:1; min-width:90px; padding:9px 0; background:var(--surface); color:var(--text-soft); border:1px solid var(--line); border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">서버에 올리기</button><button onclick="window.forceDownload()" style="flex:1; min-width:90px; padding:9px 0; background:var(--surface); color:var(--text-soft); border:1px solid var(--line); border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">서버에서 받기</button>' : ''}
                             </div>
                         </div>
                         <button class="primary-btn" onclick="window.exportData()" style="margin:0; background:var(--surface); border:1px solid var(--primary); color:var(--primary); font-weight:800;">💾 현재 데이터 내보내기 (백업)</button>
