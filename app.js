@@ -35,11 +35,16 @@ let syncKey = localStorage.getItem('richSyncKey') || '';
 let syncState = { busy: false, msg: '', at: null };
 let syncTimer = null;
 let syncReady = false;   // 최초 동기화가 끝나기 전에는 자동 저장하지 않는다
+let lastSeen = localStorage.getItem('richLastSeen') || '';   // 마지막으로 맞춘 서버 시각
+let dirty = localStorage.getItem('richDirty') === '1';        // 아직 못 올린 변경
+
+function markDirty(v) { dirty = v; localStorage.setItem('richDirty', v ? '1' : '0'); }
+function setSeen(ts) { lastSeen = ts || ''; localStorage.setItem('richLastSeen', lastSeen); }
 
 function persist() {
     localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
     localStorage.setItem('myLoans', JSON.stringify(loans));
-    if (syncKey && syncReady) scheduleSync();
+    if (syncKey) { markDirty(true); if (syncReady) scheduleSync(); }
 }
 
 function scheduleSync() {
@@ -78,6 +83,7 @@ async function saveToServer(silent) {
         try {
             const v = await getSync('load');
             ok = Array.isArray(v.tx) && v.tx.length === expect;
+            if (ok) { setSeen(v.lastSync || ''); markDirty(false); }
         } catch (e) { ok = false; }
         syncState = ok
             ? { busy: false, msg: '', at: new Date() }
@@ -96,7 +102,8 @@ async function saveToServer(silent) {
 // 서버 데이터를 가져오되, 적용 여부는 호출자가 결정한다
 async function fetchServer() {
     const r = await getSync('load');
-    return { tx: Array.isArray(r.tx) ? r.tx : [], loans: Array.isArray(r.loans) ? r.loans : [] };
+    return { tx: Array.isArray(r.tx) ? r.tx : [], loans: Array.isArray(r.loans) ? r.loans : [],
+             lastSync: r.lastSync || '' };
 }
 
 function applyServer(r) {
@@ -105,9 +112,12 @@ function applyServer(r) {
     loans = r.loans.map(l => { if (!l.records) l.records = []; if (!l.kind) l.kind = '일반'; return l; });
     localStorage.setItem('mySavedTxs', JSON.stringify(savedTxs));
     localStorage.setItem('myLoans', JSON.stringify(loans));
+    setSeen(r.lastSync || '');
+    markDirty(false);
 }
 
-// 앱 시작 시 호출. 로컬을 함부로 지우지 않는 것이 핵심.
+// 앱 시작 시 호출.
+// 서버가 기록한 lastSync 가 이 기기가 마지막으로 본 값과 다르면 = 다른 기기에서 변경됨.
 async function initialSync() {
     if (!syncKey) return;
     syncState.busy = true;
@@ -117,32 +127,40 @@ async function initialSync() {
     } catch (e) {
         syncState = { busy: false, msg: '서버 연결 실패 — 이 기기 데이터로 표시합니다', at: null };
         console.error('[SYNC] 초기 조회 실패', e);
-        return;   // syncReady 를 켜지 않는다 → 자동 저장도 하지 않음
+        return;
     }
+
     const localN = savedTxs.length, serverN = r.tx.length;
-    console.log('[SYNC] 로컬 ' + localN + '건 / 서버 ' + serverN + '건');
+    const serverChanged = (r.lastSync || '') !== lastSeen;
+    console.log('[SYNC] 로컬 ' + localN + ' / 서버 ' + serverN + ' / 서버변경 ' + serverChanged + ' / 미저장 ' + dirty);
 
     if (serverN === 0 && localN === 0) {
         syncReady = true;
+
     } else if (serverN === 0 && localN > 0) {
-        // 서버가 비었다 → 절대 덮어쓰지 않고, 로컬을 서버로 올린다
         syncReady = true;
         await saveToServer(true);
         showToast('이 기기 데이터 ' + localN + '건을 서버에 등록했어요');
-    } else if (localN === 0) {
+
+    } else if (!serverChanged) {
+        syncReady = true;
+        if (dirty && localN > 0) {
+            await saveToServer(true);
+            showToast('저장하지 못했던 변경사항을 올렸어요');
+        }
+
+    } else if (!dirty) {
         applyServer(r);
         syncReady = true;
-    } else if (serverN === localN) {
-        applyServer(r);   // 같은 건수면 서버 기준
-        syncReady = true;
+        if (serverN !== localN) showToast('다른 기기의 변경사항을 반영했어요 (' + serverN + '건)');
+
     } else {
-        // 양쪽에 서로 다른 데이터가 있다 → 사용자가 선택
         const useServer = confirm(
-            '이 기기와 서버의 데이터가 다릅니다.\n\n' +
-            '  · 이 기기 : 거래 ' + localN + '건\n' +
+            '두 곳에서 각각 수정되었습니다.\n\n' +
+            '  · 이 기기 : 거래 ' + localN + '건 (미저장 변경 있음)\n' +
             '  · 서버    : 거래 ' + serverN + '건\n\n' +
-            '[확인] 서버 데이터를 사용 (이 기기 내용은 사라집니다)\n' +
-            '[취소] 이 기기 데이터를 사용 (서버에 덮어씁니다)'
+            '[확인] 서버 데이터 사용 (이 기기 변경분 사라짐)\n' +
+            '[취소] 이 기기 데이터 사용 (서버에 덮어씀)'
         );
         if (useServer) { applyServer(r); syncReady = true; }
         else { syncReady = true; await saveToServer(true); }
@@ -157,6 +175,9 @@ window.setupSync = async function() {
     syncKey = String(k).trim();
     if (!syncKey) {
         localStorage.removeItem('richSyncKey');
+        localStorage.removeItem('richLastSeen');
+        localStorage.removeItem('richDirty');
+        lastSeen = ''; dirty = false;
         syncReady = false;
         syncState = { busy: false, msg: '', at: null };
         showToast('동기화를 해제했습니다. 이 기기에만 저장됩니다.');
@@ -553,7 +574,7 @@ function render() {
                                 ${syncKey
                                     ? (syncState.msg
                                         ? '<span style=\'color:#ff8f8f\'>' + syncState.msg + '</span>'
-                                        : '거래 ' + savedTxs.length + '건 · 변경 시 자동 저장' + (syncState.at ? ' · 최근 ' + syncState.at.toLocaleTimeString('ko-KR') : ''))
+                                        : '거래 ' + savedTxs.length + '건 · ' + (dirty ? '<span style=\'color:#ffb43c\'>저장 대기중</span>' : '자동 저장됨') + (syncState.at ? ' · ' + syncState.at.toLocaleTimeString('ko-KR') : ''))
                                     : 'PC·모바일 어디서나 같은 데이터를 보려면 액세스 키를 설정하세요.'}
                             </div>
                             <div style="display:flex; gap:6px; flex-wrap:wrap;">
